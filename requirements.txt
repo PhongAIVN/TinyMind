@@ -1,0 +1,7 @@
+torch>=2.2
+sentencepiece>=0.2
+numpy>=1.26
+tqdm>=4.66
+safetensors>=0.4
+datasets>=2.19
+pytest>=8.0

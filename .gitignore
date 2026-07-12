@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Data and artifacts
+data/
+checkpoints/
+*.bin
+*.pt
+*.safetensors
+tokenizer/*.model
+tokenizer/*.vocab
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
