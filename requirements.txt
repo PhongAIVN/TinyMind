@@ -5,3 +5,4 @@ tqdm>=4.66
 safetensors>=0.4
 datasets>=2.19
 pytest>=8.0
+tokenizers>=0.15

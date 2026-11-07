@@ -1,0 +1,312 @@
+<mxfile host="drawio" version="24.0.0">
+  <diagram id="slm-arch" name="Model architecture">
+    <mxGraphModel dx="1400" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===================== A. Tổng thể ===================== -->
+        <mxCell id="a_title" value="A. Tổng thể — decoder-only, pre-norm" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="460" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a_body" value="Model (thân) — core/model.py" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeColor=#999999;verticalAlign=top;align=left;spacingLeft=8;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="130" width="280" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="a_headbox" value="CausalLM (đầu) — core/model.py" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeColor=#999999;verticalAlign=top;align=left;spacingLeft=8;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="280" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="a_in" value="input_ids&lt;br&gt;&lt;i&gt;(B, T)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="60" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="a_emb" value="&lt;b&gt;Token Embedding&lt;/b&gt;&lt;br&gt;V × d" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="70" y="170" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_blocks" value="&lt;b&gt;Block × L&lt;/b&gt;&lt;br&gt;core/block.py&lt;br&gt;(chi tiết: hình B)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="260" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="a_norm" value="&lt;b&gt;RMSNorm cuối&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="70" y="395" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="a_head" value="&lt;b&gt;lm_head&lt;/b&gt;&lt;br&gt;Linear d → V, không bias" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="70" y="560" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_logits" value="logits&lt;br&gt;&lt;i&gt;(B, T, V)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="670" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="a_loss" value="Cross-entropy (dịch nhãn 1 vị trí)&lt;br&gt;&lt;i&gt;trainer/losses.py — ngoài model&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="760" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_rope" value="&lt;b&gt;RoPE&lt;/b&gt; cos, sin&lt;br&gt;&lt;i&gt;(T, hd)&lt;/i&gt;&lt;br&gt;tính 1 lần, dùng chung&lt;br&gt;core/rope.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="345" y="265" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a_e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="a_in" target="a_emb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_e2" value="&lt;i&gt;(B, T, d)&lt;/i&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="a_emb" target="a_blocks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_e3" value="&lt;i&gt;(B, T, d)&lt;/i&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="a_blocks" target="a_norm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_e4" value="hidden &lt;i&gt;(B, T, d)&lt;/i&gt;&lt;br&gt;← Critic (PPO) lấy ở đây" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="a_norm" target="a_head">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="a_head" target="a_logits">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_e6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="a_logits" target="a_loss">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#d6b656;" edge="1" parent="1" source="a_rope" target="a_blocks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_tie" value="dùng chung&lt;br&gt;trọng số" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;startArrow=none;dashed=1;strokeColor=#b85450;fontColor=#b85450;fontSize=11;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="a_head" target="a_emb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="585" />
+              <mxPoint x="20" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ===================== B. Block ===================== -->
+        <mxCell id="b_title" value="B. Block (pre-norm) — core/block.py" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="560" y="20" width="360" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="b_in" value="h&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="60" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="b_n1" value="&lt;b&gt;RMSNorm 1&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="610" y="145" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="b_attn" value="&lt;b&gt;Causal Self-Attention&lt;/b&gt;&lt;br&gt;core/attention.py (hình C)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="610" y="215" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="b_add1" value="+" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;strokeColor=#666666;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="305" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="b_n2" value="&lt;b&gt;RMSNorm 2&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="610" y="385" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="b_ffn" value="&lt;b&gt;SwiGLU FFN&lt;/b&gt;&lt;br&gt;core/feedforward.py (hình D)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="610" y="455" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="b_add2" value="+" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;strokeColor=#666666;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="545" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="b_out" value="h&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="625" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="b_note" value="&lt;b&gt;RMSNorm(x) = x / √(mean(x²) + ε) · w&lt;/b&gt;&lt;br&gt;core/rmsnorm.py — tính bằng fp32 rồi ép lại dtype&lt;br&gt;Residual viết &lt;i&gt;h = h + f(norm(h))&lt;/i&gt;, không cộng tại chỗ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffbe6;strokeColor=#d6b656;align=left;spacingLeft=8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="710" width="340" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="b_e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_in" target="b_n1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_n1" target="b_attn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_attn" target="b_add1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_add1" target="b_n2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_n2" target="b_ffn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_e6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_ffn" target="b_add2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="b_add2" target="b_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_res1" value="residual" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;fontColor=#9673a6;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="b_in" target="b_add1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="83" />
+              <mxPoint x="880" y="325" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="b_res2" value="residual" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#82b366;fontColor=#82b366;fontSize=11;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b_add1" target="b_add2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="575" y="325" />
+              <mxPoint x="575" y="565" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ===================== C. Attention ===================== -->
+        <mxCell id="c_title" value="C. Causal Self-Attention (MHA) — core/attention.py" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="960" y="20" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c_x" value="x&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="60" width="200" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="c_q" value="&lt;b&gt;q_proj&lt;/b&gt; d → h·hd&lt;br&gt;view &lt;i&gt;(B,T,h,hd)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="145" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_k" value="&lt;b&gt;k_proj&lt;/b&gt; d → h·hd&lt;br&gt;view &lt;i&gt;(B,T,h,hd)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="145" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_v" value="&lt;b&gt;v_proj&lt;/b&gt; d → h·hd&lt;br&gt;view &lt;i&gt;(B,T,h,hd)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="145" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_rq" value="&lt;b&gt;RoPE&lt;/b&gt;(q)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="980" y="235" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_rk" value="&lt;b&gt;RoPE&lt;/b&gt;(k)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="235" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_score" value="transpose → &lt;i&gt;(B,h,T,hd)&lt;/i&gt;&lt;br&gt;&lt;b&gt;scores = q · kᵀ / √hd&lt;/b&gt;  &lt;i&gt;(B,h,T,T)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="320" width="310" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_mask" value="&lt;b&gt;+ causal mask&lt;/b&gt;&lt;br&gt;−∞ phía trên đường chéo (vị trí j &gt; i)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="405" width="310" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_soft" value="&lt;b&gt;softmax&lt;/b&gt;(dim = −1) — tính bằng fp32&lt;br&gt;mỗi hàng cộng lại = 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="490" width="310" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_mul" value="&lt;b&gt;weights · v&lt;/b&gt;&lt;br&gt;&lt;i&gt;(B, h, T, hd)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="575" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_merge" value="transpose + reshape&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="660" width="200" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="c_o" value="&lt;b&gt;o_proj&lt;/b&gt; d → d" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="740" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_out" value="out&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="815" width="200" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="c_note" value="h = n_heads, hd = d / h&lt;br&gt;Linear không bias&lt;br&gt;Độ phức tạp O(T²·d)" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="980" y="660" width="170" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c_e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_x" target="c_q">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_x" target="c_k">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_x" target="c_v">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_q" target="c_rq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_k" target="c_rk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;entryX=0.226;entryY=0;" edge="1" parent="1" source="c_rq" target="c_score">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;entryX=0.774;entryY=0;" edge="1" parent="1" source="c_rk" target="c_score">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e8" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_score" target="c_mask">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e9" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_mask" target="c_soft">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e10" value="&lt;i&gt;(B,h,T,T)&lt;/i&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;exitX=0.5;exitY=1;entryX=0.11;entryY=0;" edge="1" parent="1" source="c_soft" target="c_mul">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e11" value="v &lt;i&gt;(B,h,T,hd)&lt;/i&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;exitX=0.5;exitY=1;entryX=0.906;entryY=0;" edge="1" parent="1" source="c_v" target="c_mul">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e12" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_mul" target="c_merge">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e13" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_merge" target="c_o">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c_e14" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="c_o" target="c_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== D. SwiGLU ===================== -->
+        <mxCell id="d_title" value="D. SwiGLU FFN — core/feedforward.py" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="870" width="460" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d_x" value="x&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="962" width="130" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="d_gate" value="&lt;b&gt;gate_proj&lt;/b&gt;&lt;br&gt;d → ffn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="240" y="915" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d_up" value="&lt;b&gt;up_proj&lt;/b&gt;&lt;br&gt;d → ffn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="240" y="1005" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d_act" value="&lt;b&gt;SiLU&lt;/b&gt;&lt;br&gt;x · σ(x)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="450" y="915" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d_mul" value="⊙" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;strokeColor=#666666;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="610" y="965" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d_down" value="&lt;b&gt;down_proj&lt;/b&gt;&lt;br&gt;ffn → d" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="700" y="960" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d_out" value="out&lt;br&gt;&lt;i&gt;(B, T, d)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="900" y="962" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="d_note" value="FFN(x) = down( SiLU(gate(x)) ⊙ up(x) ),  ⊙ = nhân từng phần tử&lt;br&gt;ffn ≈ 8/3 · d, làm tròn lên bội số 64  ·  số tham số = 3 · d · ffn" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="240" y="1070" width="620" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d_e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_x" target="d_gate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_x" target="d_up">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_gate" target="d_act">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_act" target="d_mul">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_up" target="d_mul">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_e6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_mul" target="d_down">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="d_down" target="d_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== Chú thích ===================== -->
+        <mxCell id="l_box" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bbbbbb;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="890" width="390" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="l_title" value="Chú thích" style="text;html=1;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="895" width="200" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="l_1" value="Linear (có tham số)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="925" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="l_2" value="Embedding / lm_head" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="925" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="l_3" value="RMSNorm / RoPE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="960" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="l_4" value="Phép toán không tham số" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="960" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="l_5" value="&lt;i&gt;Tensor (shape)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="995" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="l_note" value="B batch · T độ dài chuỗi · d d_model · V vocab · L số block&lt;br&gt;&lt;b&gt;Tham số&lt;/b&gt; ≈ V·d + L·(4d² + 3·d·ffn + 2d) + d&lt;br&gt;Chặng 1: MHA (n_kv = n_heads). Nhánh phụ sau pretrain: GQA, QK-Norm, flash attention, MoE, YaRN" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="1030" width="365" height="85" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

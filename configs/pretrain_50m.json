@@ -1,0 +1,21 @@
+{
+  "train_bin": "dataset/pretrain/tokens/train.bin",
+  "eval_bin": "dataset/pretrain/tokens/eval.bin",
+  "out_dir": "checkpoints/50m",
+  "seq_len": 512,
+  "batch_size": 32,
+  "accum_steps": 4,
+  "max_steps": 6899,
+  "warmup_steps": 500,
+  "lr": 0.0006,
+  "min_lr": 0.00006,
+  "weight_decay": 0.1,
+  "grad_clip": 1.0,
+  "log_interval": 10,
+  "eval_interval": 250,
+  "eval_batches": 20,
+  "save_interval": 500,
+  "dtype": "bf16",
+  "device": "cuda",
+  "seed": 0
+}

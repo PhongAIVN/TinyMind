@@ -19,3 +19,10 @@ tokenizer/*.vocab
 .vscode/
 .idea/
 Thumbs.db
+/data
+/minimind-master
+/dataset
+# Remote desktop / editor backups
+*.rdp
+*.bkp
+*.zip
