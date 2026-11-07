@@ -61,6 +61,7 @@ def make_train_config(tmp_path, token_bins):
             eval_batches=2,
             save_interval=1000,
             dtype="fp32",
+            attention="manual",
             device="cpu",
             seed=0,
         )

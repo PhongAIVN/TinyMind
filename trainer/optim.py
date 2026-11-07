@@ -39,4 +39,6 @@ def build_optimizer(
         {"params": decay, "weight_decay": weight_decay},
         {"params": no_decay, "weight_decay": 0.0},
     ]
-    return torch.optim.AdamW(groups, lr=lr, betas=betas, eps=eps)
+    # fused: gộp cập nhật mọi tham số vào 1 kernel; chỉ hỗ trợ khi tham số nằm trên GPU.
+    on_cuda = all(param.is_cuda for param in decay + no_decay)
+    return torch.optim.AdamW(groups, lr=lr, betas=betas, eps=eps, fused=on_cuda)

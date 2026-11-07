@@ -58,3 +58,11 @@ def test_optimizer_updates_weights(tiny_config):
     optimizer.step()
 
     assert not torch.allclose(before, model.model.final_norm.weight)
+
+def test_fused_only_on_gpu(tiny_config):
+    """CPU không hỗ trợ fused AdamW -> phải tắt; trên GPU mới bật."""
+    from core.model import CausalLM
+
+    optimizer = build_optimizer(CausalLM(tiny_config), lr=1e-3, weight_decay=0.1)
+
+    assert not optimizer.defaults["fused"]

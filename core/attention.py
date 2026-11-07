@@ -62,6 +62,9 @@ class CausalSelfAttention(nn.Module):
             bias=False,
         )
 
+        # True: dùng F.scaled_dot_product_attention thay cho bản tự viết (bật bằng enable_sdpa).
+        self.use_sdpa = False
+
         # Output projection
         self.o_proj = nn.Linear(
             d_model,
@@ -162,6 +165,49 @@ class CausalSelfAttention(nn.Module):
             v = torch.cat([past_v, v], dim=-2)
         present = (k, v) if use_cache else None
 
+        if self.use_sdpa:
+            out = self._sdpa_attention(q, k, v, past_len)
+        else:
+            out = self._manual_attention(q, k, v, past_len)
+
+        # 9. Ghép các attention heads lại
+        #
+        # [B, h, T, hd]
+        #
+        #       ↓ transpose
+        #
+        # [B, T, h, hd]
+        #
+        #       ↓ reshape
+        #
+        # [B, T, d_model]
+
+        out = out.transpose(1, 2).reshape(
+            batch,
+            seq_len,
+            d_model,
+        )
+
+        # 10. Output projection
+        #
+        # [B, T, d_model]
+        #       ↓
+        # [B, T, d_model]
+
+        out = self.o_proj(out)
+
+        return (out, present) if use_cache else out
+
+    def _manual_attention(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor,
+        past_len: int,
+    ) -> torch.Tensor:
+        """Attention tự cài đặt: q, k, v [B, h, T(+past), hd] -> [B, h, T, hd]."""
+        q_len = q.shape[-2]
+
         # 5. Tính attention scores
         #
         # q:
@@ -194,10 +240,10 @@ class CausalSelfAttention(nn.Module):
 
         future = torch.triu(
             torch.ones(
-                seq_len,
-                past_len + seq_len,  # có cache: mỗi query nhìn cả token cũ
+                q_len,
+                past_len + q_len,  # có cache: mỗi query nhìn cả token cũ
                 dtype=torch.bool,
-                device=x.device,
+                device=q.device,
             ),
             diagonal=1 + past_len,  # ô cấm: j > i + past_len
         )
@@ -237,31 +283,31 @@ class CausalSelfAttention(nn.Module):
 
         out = weights @ v
 
-        # 9. Ghép các attention heads lại
-        #
-        # [B, h, T, hd]
-        #
-        #       ↓ transpose
-        #
-        # [B, T, h, hd]
-        #
-        #       ↓ reshape
-        #
-        # [B, T, d_model]
+        return out
 
-        out = out.transpose(1, 2).reshape(
-            batch,
-            seq_len,
-            d_model,
-        )
+    def _sdpa_attention(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor,
+        past_len: int,
+    ) -> torch.Tensor:
+        """Cùng công thức nhưng dùng kernel hợp nhất của PyTorch (flash / memory-efficient).
 
-        # 10. Output projection
-        #
-        # [B, T, d_model]
-        #       ↓
-        # [B, T, d_model]
+        Không tạo ma trận điểm [B, h, T, T] trong bộ nhớ -> nhanh và đỡ VRAM hơn.
+        Không cache: is_causal. Có cache: SDPA căn mask causal theo góc trên-trái,
+        sai khi số query khác số key, nên tự tạo mask (True = được nhìn).
+        """
+        if past_len == 0:
+            return F.scaled_dot_product_attention(q, k, v, is_causal=True)
+        q_len, kv_len = q.shape[-2], k.shape[-2]
+        allowed = torch.ones(q_len, kv_len, dtype=torch.bool, device=q.device).tril(diagonal=past_len)
+        return F.scaled_dot_product_attention(q, k, v, attn_mask=allowed)
 
-        out = self.o_proj(out)
 
-        return (out, present) if use_cache else out
-    
+def enable_sdpa(model: nn.Module, enabled: bool = True) -> nn.Module:
+    """Bật/tắt SDPA cho mọi lớp attention trong model. Không đổi trọng số. Trả về chính model."""
+    for module in model.modules():
+        if isinstance(module, CausalSelfAttention):
+            module.use_sdpa = enabled
+    return model

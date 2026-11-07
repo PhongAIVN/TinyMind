@@ -101,3 +101,16 @@ def test_batches_differ_between_steps(tiny_model_config, make_train_config):
         train_pretrain.next_token_loss = original
 
     assert not torch.equal(seen[0], seen[1])
+
+def test_sdpa_training_matches_manual(tiny_model_config, make_train_config, tmp_path):
+    """Đổi cách tính attention không được đổi kết quả train (cùng seed, fp32)."""
+    manual = train(tiny_model_config, make_train_config(max_steps=3, eval_interval=3, out_dir=str(tmp_path / "a")))
+    sdpa = train(tiny_model_config, make_train_config(max_steps=3, eval_interval=3, attention="sdpa", out_dir=str(tmp_path / "b")))
+
+    assert sdpa["train_loss"] == pytest.approx(manual["train_loss"], rel=1e-4)
+    assert sdpa["eval_loss"] == pytest.approx(manual["eval_loss"], rel=1e-4)
+
+
+def test_unknown_attention_is_rejected(make_train_config):
+    with pytest.raises(ValueError, match="attention"):
+        make_train_config(attention="flash")

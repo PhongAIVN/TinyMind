@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 ALLOWED_DTYPES = ("fp32", "fp16", "bf16")
+ALLOWED_ATTENTION = ("manual", "sdpa")  # sdpa: kernel hợp nhất của PyTorch, nhanh hơn trên GPU
 POSITIVE_INT_FIELDS = (
     "seq_len", "batch_size", "accum_steps", "max_steps",
     "log_interval", "eval_interval", "eval_batches", "save_interval",
@@ -31,6 +32,7 @@ class TrainConfig:
     eval_batches: int
     save_interval: int
     dtype: str
+    attention: str
     device: str
     seed: int
 
@@ -62,6 +64,8 @@ class TrainConfig:
             raise ValueError(f"weight_decay={self.weight_decay} phải >= 0")
         if self.dtype not in ALLOWED_DTYPES:
             raise ValueError(f"dtype={self.dtype!r} phải thuộc {ALLOWED_DTYPES}")
+        if self.attention not in ALLOWED_ATTENTION:
+            raise ValueError(f"attention={self.attention!r} phải thuộc {ALLOWED_ATTENTION}")
 
     @property
     def tokens_per_step(self) -> int:

@@ -9,6 +9,7 @@ from typing import Any
 import torch
 from torch.utils.data import DataLoader
 
+from core.attention import enable_sdpa
 from core.config import ModelConfig
 from core.model import CausalLM
 from trainer.checkpoint import load_checkpoint, save_checkpoint
@@ -81,7 +82,7 @@ def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = F
         shuffle=False,
     )
 
-    model = CausalLM(model_config).to(device)
+    model = enable_sdpa(CausalLM(model_config), train_config.attention == "sdpa").to(device)
     optimizer = build_optimizer(model, lr=train_config.lr, weight_decay=train_config.weight_decay)
 
     checkpoint_path = Path(train_config.out_dir) / CHECKPOINT_NAME
