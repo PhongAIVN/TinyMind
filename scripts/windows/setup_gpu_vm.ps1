@@ -9,7 +9,8 @@
 #  Du lieu tai ve: dataset\raw\<nguon>\  (khop SOURCES trong scripts\build_pretrain_corpus.py)
 # ================================================================
 param(
-    [string]$TorchIndex = "https://download.pytorch.org/whl/cu126",
+    # cu128: can cho GPU Blackwell (RTX 50xx), van chay tren 30xx/40xx
+    [string]$TorchIndex = "https://download.pytorch.org/whl/cu128",
     [switch]$SkipDownload,
     [switch]$DryRun
 )
