@@ -2,11 +2,13 @@
 
 import argparse
 import json
+from collections.abc import Callable
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 
 from core.attention import enable_sdpa
@@ -47,17 +49,29 @@ def endless(loader: DataLoader):
         yield from loader
 
 
+LossFn = Callable[[nn.Module, tuple[torch.Tensor, ...]], torch.Tensor]
+
+
+def language_model_loss(model: nn.Module, batch: tuple[torch.Tensor, ...]) -> torch.Tensor:
+    """Loss mặc định (pretrain, SFT, LoRA): batch = (x, y), đoán token kế tiếp."""
+    x, y = batch
+    return next_token_loss(model(x), y)
+
+
 @torch.no_grad()
-def evaluate(model: CausalLM, loader: DataLoader, n_batches: int, device: torch.device, autocast) -> float:
+def evaluate(
+    model: CausalLM, loader: DataLoader, n_batches: int, device: torch.device, autocast,
+    compute_loss: LossFn = language_model_loss,
+) -> float:
     """Val loss trung bình trên n_batches batch đầu tiên."""
     model.eval()
     total, count = 0.0, 0
-    for batch_index, (x, y) in enumerate(loader):
+    for batch_index, batch in enumerate(loader):
         if batch_index >= n_batches:
             break
-        x, y = x.to(device), y.to(device)
+        batch = tuple(tensor.to(device) for tensor in batch)
         with autocast():
-            total += next_token_loss(model(x), y).item()
+            total += compute_loss(model, batch).item()
         count += 1
     model.train()
     return total / max(count, 1)
@@ -82,11 +96,15 @@ def run_training(
     eval_dataset: Dataset,
     checkpoint_name: str,
     resume: bool = False,
+    prepare_model: Callable[[nn.Module], nn.Module] | None = None,
+    compute_loss: LossFn = language_model_loss,
 ) -> dict[str, Any]:
     """Vòng lặp train dùng chung cho mọi chặng: dataset trả (x, y), y = IGNORE_INDEX ở chỗ không học.
 
     resume=True: chạy tiếp đúng run này. Ngược lại, nếu có train_config.init_from thì nạp trọng số
     (bỏ optimizer) để bắt đầu giai đoạn mới.
+    prepare_model: sửa model trước khi tạo optimizer (vd gắn LoRA, đóng băng tham số).
+    compute_loss: loss của một batch (vd DPO: batch = 4 tensor chosen/rejected).
     """
     torch.manual_seed(train_config.seed)
     device = torch.device(train_config.device)
@@ -116,18 +134,20 @@ def run_training(
     )
 
     model = enable_sdpa(CausalLM(model_config), train_config.attention == "sdpa").to(device)
-    optimizer = build_optimizer(model, lr=train_config.lr, weight_decay=train_config.weight_decay)
-
     checkpoint_path = Path(train_config.out_dir) / checkpoint_name
-    start_step = 0
-    if resume:
-        if not checkpoint_path.exists():
-            raise FileNotFoundError(f"không có checkpoint để resume: {checkpoint_path}")
-        start_step = load_checkpoint(checkpoint_path, model, optimizer, scaler, map_location=device)
-    elif train_config.init_from:
+    if resume and not checkpoint_path.exists():
+        raise FileNotFoundError(f"không có checkpoint để resume: {checkpoint_path}")
+    if not resume and train_config.init_from:
         if not Path(train_config.init_from).exists():
             raise FileNotFoundError(f"không có trọng số init_from: {train_config.init_from}")
         load_weights(train_config.init_from, model, map_location=device)
+    if prepare_model is not None:
+        model = prepare_model(model)  # vd gắn LoRA: phải sau init_from (trọng số gốc) và trước optimizer
+    optimizer = build_optimizer(model, lr=train_config.lr, weight_decay=train_config.weight_decay)
+
+    start_step = 0
+    if resume:
+        start_step = load_checkpoint(checkpoint_path, model, optimizer, scaler, map_location=device)
 
     batches = endless(train_loader)
     # Resume: bỏ qua đúng số batch đã dùng, để chạy tiếp trùng với một lần chạy liền mạch.
@@ -155,10 +175,9 @@ def run_training(
         # mỗi .item() bắt CPU chờ GPU, làm GPU rảnh giữa các micro-batch.
         step_loss = torch.zeros((), device=device)
         for _ in range(train_config.accum_steps):
-            x, y = next(batches)
-            x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            batch = tuple(tensor.to(device, non_blocking=True) for tensor in next(batches))
             with autocast():
-                loss = next_token_loss(model(x), y) / train_config.accum_steps
+                loss = compute_loss(model, batch) / train_config.accum_steps
             scaler.scale(loss).backward()
             step_loss += loss.detach()
             throughput.update(tokens_per_micro_batch)
@@ -184,7 +203,7 @@ def run_training(
             throughput.reset()
 
         if (step + 1) % train_config.eval_interval == 0:
-            eval_loss = evaluate(model, eval_loader, train_config.eval_batches, device, autocast)
+            eval_loss = evaluate(model, eval_loader, train_config.eval_batches, device, autocast, compute_loss)
             print(f"step {step + 1:>6} | val loss {eval_loss:6.3f}")
 
         if (step + 1) % train_config.save_interval == 0:

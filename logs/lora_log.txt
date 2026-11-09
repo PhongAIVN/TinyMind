@@ -1,0 +1,69 @@
+LoRA r=8 alpha=16.0 trên 24 lớp | học 196,608/57,487,872 tham số (0.34%)
+step     10/600 | loss  1.635 | lr 1.67e-04 | gnorm  1.870 |     1,055 tok/s | vram      0 MB
+step     20/600 | loss  0.868 | lr 3.33e-04 | gnorm  1.092 |     1,048 tok/s | vram      0 MB
+step     30/600 | loss  0.707 | lr 5.00e-04 | gnorm  1.271 |     1,041 tok/s | vram      0 MB
+step     40/600 | loss  0.537 | lr 5.00e-04 | gnorm  0.605 |     1,038 tok/s | vram      0 MB
+step     50/600 | loss  0.636 | lr 4.99e-04 | gnorm  0.573 |     1,040 tok/s | vram      0 MB
+step     60/600 | loss  0.522 | lr 4.97e-04 | gnorm  0.641 |     1,047 tok/s | vram      0 MB
+step     70/600 | loss  0.459 | lr 4.95e-04 | gnorm  0.546 |     1,057 tok/s | vram      0 MB
+step     80/600 | loss  0.506 | lr 4.92e-04 | gnorm  0.536 |     1,052 tok/s | vram      0 MB
+step     90/600 | loss  0.574 | lr 4.88e-04 | gnorm  1.874 |     1,037 tok/s | vram      0 MB
+step    100/600 | loss  0.538 | lr 4.84e-04 | gnorm  1.106 |     1,035 tok/s | vram      0 MB
+step    100 | val loss  0.605
+step    110/600 | loss  0.528 | lr 4.79e-04 | gnorm  0.951 |       850 tok/s | vram      0 MB
+step    120/600 | loss  0.461 | lr 4.73e-04 | gnorm  0.769 |     1,040 tok/s | vram      0 MB
+step    130/600 | loss  0.406 | lr 4.67e-04 | gnorm  0.440 |     1,040 tok/s | vram      0 MB
+step    140/600 | loss  0.471 | lr 4.61e-04 | gnorm  0.705 |     1,037 tok/s | vram      0 MB
+step    150/600 | loss  0.503 | lr 4.53e-04 | gnorm  0.403 |     1,036 tok/s | vram      0 MB
+step    160/600 | loss  0.483 | lr 4.45e-04 | gnorm  0.613 |     1,030 tok/s | vram      0 MB
+step    170/600 | loss  0.512 | lr 4.37e-04 | gnorm  1.354 |     1,036 tok/s | vram      0 MB
+step    180/600 | loss  0.528 | lr 4.28e-04 | gnorm  0.787 |     1,037 tok/s | vram      0 MB
+step    190/600 | loss  0.490 | lr 4.19e-04 | gnorm  0.529 |     1,040 tok/s | vram      0 MB
+step    200/600 | loss  0.432 | lr 4.09e-04 | gnorm  0.469 |     1,041 tok/s | vram      0 MB
+step    200 | val loss  0.578
+step    210/600 | loss  0.456 | lr 3.99e-04 | gnorm  0.636 |       843 tok/s | vram      0 MB
+step    220/600 | loss  0.513 | lr 3.89e-04 | gnorm  1.745 |     1,032 tok/s | vram      0 MB
+step    230/600 | loss  0.466 | lr 3.78e-04 | gnorm  1.004 |     1,032 tok/s | vram      0 MB
+step    240/600 | loss  0.468 | lr 3.67e-04 | gnorm  0.690 |     1,032 tok/s | vram      0 MB
+step    250/600 | loss  0.468 | lr 3.55e-04 | gnorm  0.920 |     1,039 tok/s | vram      0 MB
+step    260/600 | loss  0.430 | lr 3.43e-04 | gnorm  0.996 |     1,035 tok/s | vram      0 MB
+step    270/600 | loss  0.472 | lr 3.31e-04 | gnorm  0.939 |     1,030 tok/s | vram      0 MB
+step    280/600 | loss  0.392 | lr 3.19e-04 | gnorm  0.850 |     1,024 tok/s | vram      0 MB
+step    290/600 | loss  0.451 | lr 3.07e-04 | gnorm  0.557 |     1,037 tok/s | vram      0 MB
+step    300/600 | loss  0.350 | lr 2.95e-04 | gnorm  0.584 |     1,034 tok/s | vram      0 MB
+step    300 | val loss  0.558
+step    310/600 | loss  0.471 | lr 2.82e-04 | gnorm  0.611 |       856 tok/s | vram      0 MB
+step    320/600 | loss  0.462 | lr 2.70e-04 | gnorm  0.775 |     1,045 tok/s | vram      0 MB
+step    330/600 | loss  0.442 | lr 2.58e-04 | gnorm  1.297 |     1,044 tok/s | vram      0 MB
+step    340/600 | loss  0.395 | lr 2.45e-04 | gnorm  0.566 |     1,045 tok/s | vram      0 MB
+step    350/600 | loss  0.490 | lr 2.33e-04 | gnorm  0.613 |     1,044 tok/s | vram      0 MB
+step    360/600 | loss  0.441 | lr 2.21e-04 | gnorm  0.744 |     1,047 tok/s | vram      0 MB
+step    370/600 | loss  0.389 | lr 2.09e-04 | gnorm  0.559 |     1,049 tok/s | vram      0 MB
+step    380/600 | loss  0.381 | lr 1.97e-04 | gnorm  1.061 |     1,032 tok/s | vram      0 MB
+step    390/600 | loss  0.455 | lr 1.86e-04 | gnorm  0.980 |     1,045 tok/s | vram      0 MB
+step    400/600 | loss  0.394 | lr 1.75e-04 | gnorm  0.793 |       986 tok/s | vram      0 MB
+step    400 | val loss  0.533
+step    410/600 | loss  0.422 | lr 1.64e-04 | gnorm  1.159 |       801 tok/s | vram      0 MB
+step    420/600 | loss  0.379 | lr 1.53e-04 | gnorm  0.725 |       953 tok/s | vram      0 MB
+step    430/600 | loss  0.428 | lr 1.43e-04 | gnorm  0.943 |       959 tok/s | vram      0 MB
+step    440/600 | loss  0.415 | lr 1.33e-04 | gnorm  0.888 |       915 tok/s | vram      0 MB
+step    450/600 | loss  0.360 | lr 1.24e-04 | gnorm  0.504 |       955 tok/s | vram      0 MB
+step    460/600 | loss  0.412 | lr 1.15e-04 | gnorm  1.033 |       977 tok/s | vram      0 MB
+step    470/600 | loss  0.400 | lr 1.06e-04 | gnorm  0.561 |       971 tok/s | vram      0 MB
+step    480/600 | loss  0.425 | lr 9.82e-05 | gnorm  1.424 |       990 tok/s | vram      0 MB
+step    490/600 | loss  0.416 | lr 9.08e-05 | gnorm  0.590 |       997 tok/s | vram      0 MB
+step    500/600 | loss  0.419 | lr 8.40e-05 | gnorm  0.717 |       993 tok/s | vram      0 MB
+step    500 | val loss  0.524
+step    510/600 | loss  0.435 | lr 7.77e-05 | gnorm  0.696 |       805 tok/s | vram      0 MB
+step    520/600 | loss  0.331 | lr 7.21e-05 | gnorm  0.590 |     1,007 tok/s | vram      0 MB
+step    530/600 | loss  0.464 | lr 6.70e-05 | gnorm  0.760 |       977 tok/s | vram      0 MB
+step    540/600 | loss  0.410 | lr 6.26e-05 | gnorm  0.541 |       998 tok/s | vram      0 MB
+step    550/600 | loss  0.398 | lr 5.88e-05 | gnorm  0.562 |       987 tok/s | vram      0 MB
+step    560/600 | loss  0.416 | lr 5.57e-05 | gnorm  0.560 |       968 tok/s | vram      0 MB
+step    570/600 | loss  0.382 | lr 5.33e-05 | gnorm  1.172 |       974 tok/s | vram      0 MB
+step    580/600 | loss  0.447 | lr 5.15e-05 | gnorm  0.776 |     1,038 tok/s | vram      0 MB
+step    590/600 | loss  0.424 | lr 5.04e-05 | gnorm  0.874 |     1,005 tok/s | vram      0 MB
+step    600/600 | loss  0.453 | lr 5.00e-05 | gnorm  2.040 |     1,031 tok/s | vram      0 MB
+step    600 | val loss  0.516
+Xong: {'step': 600, 'train_loss': 0.453184574842453, 'eval_loss': 0.5161859691143036}
+Đã gộp LoRA -> checkpoints\lora_merged.pt

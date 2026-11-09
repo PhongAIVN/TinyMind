@@ -1,0 +1,23 @@
+{
+  "train_bin": "dataset/toy_dpo/train.jsonl",
+  "eval_bin": "dataset/toy_dpo/eval.jsonl",
+  "out_dir": "checkpoints/50m",
+  "init_from": "checkpoints/50m/lora_merged.pt",
+  "seq_len": 64,
+  "batch_size": 16,
+  "accum_steps": 1,
+  "max_steps": 400,
+  "warmup_steps": 20,
+  "lr": 1e-05,
+  "min_lr": 1e-06,
+  "weight_decay": 0.0,
+  "grad_clip": 1.0,
+  "log_interval": 10,
+  "eval_interval": 50,
+  "eval_batches": 5,
+  "save_interval": 200,
+  "dtype": "bf16",
+  "attention": "sdpa",
+  "device": "cuda",
+  "seed": 0
+}

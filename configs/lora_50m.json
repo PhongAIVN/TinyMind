@@ -1,0 +1,23 @@
+{
+  "train_bin": "dataset/toy_math/train.jsonl",
+  "eval_bin": "dataset/toy_math/eval.jsonl",
+  "out_dir": "checkpoints/50m",
+  "init_from": "checkpoints/50m/sft.pt",
+  "seq_len": 64,
+  "batch_size": 32,
+  "accum_steps": 1,
+  "max_steps": 600,
+  "warmup_steps": 30,
+  "lr": 0.0005,
+  "min_lr": 5e-05,
+  "weight_decay": 0.0,
+  "grad_clip": 1.0,
+  "log_interval": 10,
+  "eval_interval": 100,
+  "eval_batches": 5,
+  "save_interval": 200,
+  "dtype": "bf16",
+  "attention": "sdpa",
+  "device": "cuda",
+  "seed": 0
+}

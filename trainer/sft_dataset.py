@@ -6,6 +6,9 @@ Khuôn hội thoại (chat template):
 Nhãn được dựng theo từng tin nhắn (không dò chuỗi token): token của assistant
 (nội dung + <|im_end|>) được học; mọi thứ khác = IGNORE_INDEX.
 Học cả <|im_end|> để model biết lúc nào dừng.
+
+Role "tool" (kết quả công cụ): nội dung được bọc <tool_response>...</tool_response> và KHÔNG được học
+(model không tự bịa kết quả tool). Lời gọi tool nằm trong tin nhắn assistant: <tool_call>{json}</tool_call>.
 """
 
 import json
@@ -22,7 +25,8 @@ BOS_TOKEN = "<|bos|>"
 PAD_TOKEN = "<|pad|>"
 IM_START = "<|im_start|>"
 IM_END = "<|im_end|>"
-ROLES = ("system", "user", "assistant")
+ROLES = ("system", "user", "assistant", "tool")
+TOOL_RESPONSE = "<tool_response>{content}</tool_response>"
 TRAINED_ROLE = "assistant"
 TURN_SEPARATOR = "\n"
 
@@ -48,30 +52,45 @@ class ChatEncoder:
     def _encode(self, text: str) -> list[int]:
         return self.tokenizer.encode(text, add_special_tokens=False).ids
 
+    def encode_turn(self, role: str, content: str) -> tuple[list[int], list[int]]:
+        """Một tin nhắn: header + nội dung + <|im_end|> + xuống dòng. Chỉ assistant có nhãn."""
+        if role not in ROLES:
+            raise ValueError(f"role={role!r} phải thuộc {ROLES}")
+        if not isinstance(content, str):
+            raise ValueError(f"content của {role} phải là chuỗi")
+        if role == "tool":
+            content = TOOL_RESPONSE.format(content=content)
+        header = self.headers[role]
+        body = self._encode(content) + [self.im_end_id]
+        trained_body = body if role == TRAINED_ROLE else [IGNORE_INDEX] * len(body)
+        ids = header + body + self.separator
+        labels = [IGNORE_INDEX] * len(header) + trained_body + [IGNORE_INDEX] * len(self.separator)
+        return ids, labels
+
     def encode_conversation(self, messages: list[dict[str, Any]]) -> tuple[list[int], list[int]]:
         """Trả về (ids, labels) cùng độ dài; labels[i] = ids[i] nếu token đó được học."""
         if not messages:
             raise ValueError("hội thoại rỗng")
         ids, labels = [self.bos_id], [IGNORE_INDEX]
         for message in messages:
-            role, content = message.get("role"), message.get("content")
-            if role not in ROLES:
-                raise ValueError(f"role={role!r} phải thuộc {ROLES}")
-            if not isinstance(content, str):
-                raise ValueError(f"content của {role} phải là chuỗi")
-            header = self.headers[role]
-            body = self._encode(content) + [self.im_end_id]
-            ids += header + body + self.separator
-            trained_body = body if role == TRAINED_ROLE else [IGNORE_INDEX] * len(body)
-            labels += [IGNORE_INDEX] * len(header) + trained_body + [IGNORE_INDEX] * len(self.separator)
+            turn_ids, turn_labels = self.encode_turn(message.get("role"), message.get("content"))
+            ids += turn_ids
+            labels += turn_labels
         return ids, labels
 
-    def encode_prompt(self, user_text: str, system_text: str | None = None) -> list[int]:
-        """Prompt để sinh chữ: hội thoại tới header của assistant, model viết tiếp phần trả lời."""
+    def encode_prompt(self, user_text: str, system_text: str | None = None, prefill: str = "") -> list[int]:
+        """Prompt để sinh chữ: hội thoại tới header của assistant, model viết tiếp phần trả lời.
+
+        prefill: viết sẵn đầu câu trả lời, vd "<think>
+" (bật tư duy) hoặc "<think>
+
+</think>
+" (tắt).
+        """
         messages = [{"role": "system", "content": system_text}] if system_text else []
         messages.append({"role": "user", "content": user_text})
         ids, _ = self.encode_conversation(messages)
-        return ids + self.headers[TRAINED_ROLE]
+        return ids + self.headers[TRAINED_ROLE] + (self._encode(prefill) if prefill else [])
 
 
 def read_conversations(path: str | Path) -> list[list[dict[str, Any]]]:
@@ -117,11 +136,14 @@ class SFTDataset(Dataset):
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         ids, labels = self.examples[index]
-        # shortcut: luôn đệm tới seq_len (lãng phí tính toán với câu ngắn); cần nhanh hơn thì gói nhiều hội thoại vào một chuỗi.
-        padded_ids = np.full(self.seq_len + 1, self.encoder.pad_id, dtype=np.int64)
-        padded_labels = np.full(self.seq_len + 1, IGNORE_INDEX, dtype=np.int64)
-        padded_ids[: len(ids)] = ids
-        padded_labels[: len(labels)] = labels
-        x = torch.from_numpy(padded_ids[:-1])
-        y = torch.from_numpy(padded_labels[1:])
-        return x, y
+        return to_inputs_and_targets(ids, labels, self.seq_len, self.encoder.pad_id)
+
+
+def to_inputs_and_targets(ids, labels, seq_len: int, pad_id: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """Đệm (ids, labels) dài <= seq_len + 1 rồi lệch 1: x = ids[:-1], y = labels[1:], shape (seq_len,)."""
+    # shortcut: luôn đệm tới seq_len (lãng phí tính toán với câu ngắn); cần nhanh hơn thì gói nhiều hội thoại vào một chuỗi.
+    padded_ids = np.full(seq_len + 1, pad_id, dtype=np.int64)
+    padded_labels = np.full(seq_len + 1, IGNORE_INDEX, dtype=np.int64)
+    padded_ids[: len(ids)] = ids
+    padded_labels[: len(labels)] = labels
+    return torch.from_numpy(padded_ids[:-1]), torch.from_numpy(padded_labels[1:])

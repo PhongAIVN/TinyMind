@@ -171,3 +171,55 @@ def test_wrong_tokenizer_vocab_is_rejected(tokenizer, tiny_model_config):
 
     with pytest.raises(ValueError, match="sai tokenizer"):
         check_tokenizer_matches(tokenizer, tiny_model_config, "tok.json")
+
+
+def test_lora_training_changes_only_lora_and_merge_matches(tmp_path, make_train_config, tiny_model_config, token_bins):
+    """Train LoRA: trọng số gốc giữ nguyên; model gộp cho cùng logits với model LoRA."""
+    from core.lora import apply_lora, merge_lora
+    from core.model import CausalLM
+    from trainer.checkpoint import load_weights
+    from trainer.pretrain_dataset import PretrainDataset
+    from trainer.train_lora import save_merged
+
+    base_dir = tmp_path / "base"
+    train(tiny_model_config, make_train_config(out_dir=str(base_dir), max_steps=2))
+    lora_args = {"r": 2, "alpha": 4.0, "targets": ("q_proj", "v_proj"), "dropout": 0.0}
+    config = make_train_config(out_dir=str(tmp_path / "lora"), init_from=str(base_dir / "pretrain.pt"), max_steps=5, lr=1e-2)
+    datasets = [PretrainDataset(token_bins[name], config.seq_len) for name in ("train", "eval")]
+    run_training(tiny_model_config, config, *datasets, "lora.pt", prepare_model=lambda m: (apply_lora(m, **lora_args), m)[1])
+
+    base = torch.load(base_dir / "pretrain.pt", weights_only=False)["model"]
+    trained = torch.load(tmp_path / "lora" / "lora.pt", weights_only=False)["model"]
+    for name, value in trained.items():
+        original = name.replace(".base.", ".")
+        if "lora_A" not in name and "lora_B" not in name:
+            torch.testing.assert_close(value, base[original], msg=name)
+    assert any(trained[n].abs().sum() > 0 for n in trained if "lora_B" in n)  # B đã học, không còn 0
+
+    lora_model = CausalLM(tiny_model_config)
+    apply_lora(lora_model, **lora_args)
+    load_weights(tmp_path / "lora" / "lora.pt", lora_model)
+    save_merged(tiny_model_config, tmp_path / "lora" / "lora.pt", tmp_path / "merged.pt", lora_args)
+    merged = CausalLM(tiny_model_config)
+    load_weights(tmp_path / "merged.pt", merged)
+    ids = torch.randint(0, tiny_model_config.vocab_size, (2, 8))
+    torch.testing.assert_close(merged(ids), lora_model(ids), atol=1e-5, rtol=1e-5)
+
+
+def test_toy_math_answers_are_correct_and_splits_disjoint(tmp_path):
+    from scripts.build_toy_math import build_toy_math, parse_answer
+
+    counts = build_toy_math(tmp_path, n_train=500, n_eval=50)
+    assert counts == {"train": 500, "eval": 50}
+
+    def read(name):
+        return [json.loads(line) for line in (tmp_path / f"{name}.jsonl").read_text(encoding="utf-8").splitlines()]
+
+    eval_questions = {e["messages"][0]["content"].split("?")[0] for e in read("eval")}
+    for example in read("train") + read("eval"):
+        assert parse_answer(example["messages"][1]["content"]) == example["result"]
+    train_answers = {e["messages"][1]["content"] for e in read("train")}
+    eval_answers = {e["messages"][1]["content"] for e in read("eval")}
+    assert not train_answers & eval_answers  # đáp án ghi rõ "a op b = c" -> trùng đáp án = trùng bài
+    assert eval_questions
+    assert parse_answer("Không biết") is None

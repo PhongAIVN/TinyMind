@@ -33,7 +33,8 @@ def main() -> None:
     parser.add_argument("--model-config", default="configs/model_50m.json")
     parser.add_argument("--train-config", default="configs/sft_50m.json")
     parser.add_argument("--tokenizer", default="tokenizer/tokenizer.json")
-    parser.add_argument("--resume", action="store_true", help="chạy tiếp từ sft.pt")
+    parser.add_argument("--checkpoint-name", default=CHECKPOINT_NAME, help="tên file trong out_dir (vd tool.pt, think.pt)")
+    parser.add_argument("--resume", action="store_true", help="chạy tiếp từ checkpoint-name")
     args = parser.parse_args()
 
     model_config = ModelConfig.from_dict(json.loads(Path(args.model_config).read_text(encoding="utf-8")))
@@ -52,7 +53,7 @@ def main() -> None:
         f"{len(eval_dataset):,} eval | {train_config.max_steps} bước = {epochs:.2f} epoch"
     )
 
-    stats = run_training(model_config, train_config, train_dataset, eval_dataset, CHECKPOINT_NAME, args.resume)
+    stats = run_training(model_config, train_config, train_dataset, eval_dataset, args.checkpoint_name, args.resume)
     print(f"Xong: {stats}")
 
 
