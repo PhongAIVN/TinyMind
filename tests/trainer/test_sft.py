@@ -164,3 +164,10 @@ def test_build_sft_data_reads_ultrachat_parquet(tmp_path):
     assert counts == {"train": 3, "eval": 0}
     first = json.loads((tmp_path / "out" / "train.jsonl").read_text(encoding="utf-8").splitlines()[0])
     assert first["messages"] == messages
+
+
+def test_wrong_tokenizer_vocab_is_rejected(tokenizer, tiny_model_config):
+    from trainer.train_sft import check_tokenizer_matches
+
+    with pytest.raises(ValueError, match="sai tokenizer"):
+        check_tokenizer_matches(tokenizer, tiny_model_config, "tok.json")

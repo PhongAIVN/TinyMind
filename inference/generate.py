@@ -123,6 +123,8 @@ def main() -> None:
     torch.manual_seed(args.seed)
     tokenizer = Tokenizer.from_file(args.tokenizer)
     model = load_model(args.checkpoint)
+    if tokenizer.get_vocab_size() != model.config.vocab_size:
+        raise ValueError(f"tokenizer vocab {tokenizer.get_vocab_size()} khác model vocab {model.config.vocab_size}")
 
     if args.chat:
         encoder = ChatEncoder(tokenizer)

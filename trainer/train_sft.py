@@ -18,6 +18,15 @@ from trainer.train_pretrain import run_training
 CHECKPOINT_NAME = "sft.pt"
 
 
+def check_tokenizer_matches(tokenizer, model_config: ModelConfig, path: str) -> None:
+    """Tokenizer khác vocab với model -> id lệch nhau mà không báo lỗi gì, model học lại từ đầu. Chặn sớm."""
+    if tokenizer.get_vocab_size() != model_config.vocab_size:
+        raise ValueError(
+            f"{path}: vocab {tokenizer.get_vocab_size()} khác model vocab {model_config.vocab_size} "
+            "-> sai tokenizer (phải dùng đúng file đã tokenize dữ liệu pretrain)"
+        )
+
+
 def main() -> None:
     """python -m trainer.train_sft --model-config configs/model_50m.json --train-config configs/sft_50m.json"""
     parser = argparse.ArgumentParser(description="SFT trên dữ liệu hội thoại")
@@ -33,6 +42,7 @@ def main() -> None:
         raise ValueError("SFT cần init_from (trọng số pretrain), nếu không sẽ train từ ngẫu nhiên")
 
     tokenizer = Tokenizer.from_file(args.tokenizer)
+    check_tokenizer_matches(tokenizer, model_config, args.tokenizer)
     train_dataset = SFTDataset(train_config.train_bin, tokenizer, train_config.seq_len)
     eval_dataset = SFTDataset(train_config.eval_bin, tokenizer, train_config.seq_len)
     examples_per_step = train_config.batch_size * train_config.accum_steps
