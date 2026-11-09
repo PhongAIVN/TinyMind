@@ -36,7 +36,11 @@ $Downloads = @(
     @{ Repo = "taidng/UIT-ViQuAD2.0";                                  Dir = "viquad";          Include = @("data/train-*.parquet") },
     @{ Repo = "PeterPaker123/vietnamese-code-dataset";                 Dir = "code_vi";         Include = @("data/*.parquet") },
     @{ Repo = "iamtarun/python_code_instructions_18k_alpaca";          Dir = "python_instruct"; Include = @("data/*.parquet") },
-    @{ Repo = "OpenCoder-LLM/opc-annealing-corpus";                    Dir = "opc_code";        Include = @("synthetic_qa/1*.jsonl") }
+    @{ Repo = "OpenCoder-LLM/opc-annealing-corpus";                    Dir = "opc_code";        Include = @("synthetic_qa/1*.jsonl") },
+    # Hoi thoai nhieu luot, chi dung cho SFT
+    @{ Repo = "5CD-AI/Vietnamese-Multi-turn-Chat-Alpaca";              Dir = "chat_alpaca_vi";  Include = @("*.json") },
+    @{ Repo = "5CD-AI/Vietnamese-Ecommerce-Multi-turn-Chat";           Dir = "ecommerce_chat_vi"; Include = @("*.json") },
+    @{ Repo = "nguyenthanhdo/ultrachat-75k-vi";                        Dir = "ultrachat_vi";    Include = @("data/*.parquet") }
 )
 
 $VenvPython = ".venv\Scripts\python.exe"

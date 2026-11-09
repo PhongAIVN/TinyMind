@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from core.attention import enable_sdpa
 from core.config import ModelConfig
 from core.model import CausalLM
-from trainer.checkpoint import load_checkpoint, save_checkpoint
+from trainer.checkpoint import load_checkpoint, load_weights, save_checkpoint
 from trainer.losses import next_token_loss
 from trainer.lr_scheduler import get_lr
 from trainer.metrics import Throughput, format_log, global_grad_norm, max_vram_mb
@@ -24,7 +24,7 @@ TORCH_DTYPES = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bflo
 CHECKPOINT_NAME = "pretrain.pt"
 
 def build_loader(
-    dataset: PretrainDataset, batch_size: int, seed: int, shuffle: bool, pin_memory: bool = False
+    dataset: Dataset, batch_size: int, seed: int, shuffle: bool, pin_memory: bool = False
 ) -> DataLoader:
     """DataLoader có seed cố định, bỏ batch lẻ cuối để mọi batch cùng kích thước.
 
@@ -65,6 +65,29 @@ def evaluate(model: CausalLM, loader: DataLoader, n_batches: int, device: torch.
 
 def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = False) -> dict[str, Any]:
     """Chạy pretrain. Trả về thống kê cuối cùng."""
+    return run_training(
+        model_config,
+        train_config,
+        PretrainDataset(train_config.train_bin, train_config.seq_len),
+        PretrainDataset(train_config.eval_bin, train_config.seq_len),
+        CHECKPOINT_NAME,
+        resume,
+    )
+
+
+def run_training(
+    model_config: ModelConfig,
+    train_config: TrainConfig,
+    train_dataset: Dataset,
+    eval_dataset: Dataset,
+    checkpoint_name: str,
+    resume: bool = False,
+) -> dict[str, Any]:
+    """Vòng lặp train dùng chung cho mọi chặng: dataset trả (x, y), y = IGNORE_INDEX ở chỗ không học.
+
+    resume=True: chạy tiếp đúng run này. Ngược lại, nếu có train_config.init_from thì nạp trọng số
+    (bỏ optimizer) để bắt đầu giai đoạn mới.
+    """
     torch.manual_seed(train_config.seed)
     device = torch.device(train_config.device)
     dtype = TORCH_DTYPES[train_config.dtype]
@@ -79,14 +102,14 @@ def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = F
         torch.set_float32_matmul_precision("high")  # TF32 cho các phép nhân ma trận còn ở fp32
 
     train_loader = build_loader(
-        PretrainDataset(train_config.train_bin, train_config.seq_len),
+        train_dataset,
         train_config.batch_size,
         train_config.seed,
         shuffle=True,
         pin_memory=on_cuda,
     )
     eval_loader = build_loader(
-        PretrainDataset(train_config.eval_bin, train_config.seq_len),
+        eval_dataset,
         train_config.batch_size,
         train_config.seed,
         shuffle=False,
@@ -95,12 +118,16 @@ def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = F
     model = enable_sdpa(CausalLM(model_config), train_config.attention == "sdpa").to(device)
     optimizer = build_optimizer(model, lr=train_config.lr, weight_decay=train_config.weight_decay)
 
-    checkpoint_path = Path(train_config.out_dir) / CHECKPOINT_NAME
+    checkpoint_path = Path(train_config.out_dir) / checkpoint_name
     start_step = 0
     if resume:
         if not checkpoint_path.exists():
             raise FileNotFoundError(f"không có checkpoint để resume: {checkpoint_path}")
         start_step = load_checkpoint(checkpoint_path, model, optimizer, scaler, map_location=device)
+    elif train_config.init_from:
+        if not Path(train_config.init_from).exists():
+            raise FileNotFoundError(f"không có trọng số init_from: {train_config.init_from}")
+        load_weights(train_config.init_from, model, map_location=device)
 
     batches = endless(train_loader)
     # Resume: bỏ qua đúng số batch đã dùng, để chạy tiếp trùng với một lần chạy liền mạch.

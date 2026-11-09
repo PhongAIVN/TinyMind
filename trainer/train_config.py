@@ -2,7 +2,7 @@
 
 import json
 import math
-from dataclasses import asdict, dataclass, fields
+from dataclasses import MISSING, asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +35,8 @@ class TrainConfig:
     attention: str
     device: str
     seed: int
+    # Trọng số khởi đầu cho giai đoạn mới (vd SFT nạp pretrain.pt). None = khởi tạo ngẫu nhiên.
+    init_from: str | None = None
 
     def __post_init__(self) -> None:
         for name in POSITIVE_INT_FIELDS + ("seed",):
@@ -78,8 +80,9 @@ class TrainConfig:
             raise ValueError(f"from_dict cần dict, nhận được {type(data).__name__}")
 
         valid_names = {field.name for field in fields(cls)}
+        required = {field.name for field in fields(cls) if field.default is MISSING}
         unknown = set(data) - valid_names
-        missing = valid_names - set(data)
+        missing = required - set(data)
 
         errors = []
         if unknown:

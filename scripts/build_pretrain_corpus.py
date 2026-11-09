@@ -145,12 +145,18 @@ def iter_documents(source: Source, paths: list[Path]) -> Iterator[str]:
                 yield document
 
 
-def build_source(source: Source, raw_dir: Path, out_dir: Path, max_docs: int | None = None) -> dict[str, float]:
-    """Ghi một nguồn ra train/eval .jsonl. Trả về số văn bản và dung lượng chữ (MB)."""
+def source_paths(source: Source, raw_dir: Path) -> list[Path]:
+    """Các file của một nguồn, đã sắp xếp. Không có file nào thì báo FileNotFoundError."""
     # Bỏ thư mục ẩn: `hf download` ghi metadata .json vào <local-dir>/.cache/
     paths = sorted(p for p in raw_dir.glob(source.pattern) if not any(part.startswith(".") for part in p.relative_to(raw_dir).parts))
     if not paths:
         raise FileNotFoundError(f"{source.name}: không có file khớp {raw_dir / source.pattern}")
+    return paths
+
+
+def build_source(source: Source, raw_dir: Path, out_dir: Path, max_docs: int | None = None) -> dict[str, float]:
+    """Ghi một nguồn ra train/eval .jsonl. Trả về số văn bản và dung lượng chữ (MB)."""
+    paths = source_paths(source, raw_dir)
 
     budget_bytes = source.max_mb * BYTES_PER_MB if source.max_mb else math.inf
     doc_limit = max_docs if max_docs is not None else math.inf

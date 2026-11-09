@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from core.config import ModelConfig
 from core.model import CausalLM
 from trainer.checkpoint import load_weights
+from trainer.sft_dataset import ChatEncoder
 
 GREEDY_TEMPERATURE = 0.0
 
@@ -114,6 +115,7 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=40)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--no-cache", action="store_true", help="tắt KV cache (chậm hơn)")
+    parser.add_argument("--chat", action="store_true", help="bọc prompt theo khuôn hội thoại (model SFT)")
     args = parser.parse_args()
 
     from tokenizers import Tokenizer
@@ -122,19 +124,28 @@ def main() -> None:
     tokenizer = Tokenizer.from_file(args.tokenizer)
     model = load_model(args.checkpoint)
 
-    input_ids = torch.tensor([tokenizer.encode(args.prompt).ids], dtype=torch.long)
+    if args.chat:
+        encoder = ChatEncoder(tokenizer)
+        prompt_ids, stop_id = encoder.encode_prompt(args.prompt), encoder.im_end_id
+    else:
+        prompt_ids, stop_id = tokenizer.encode(args.prompt).ids, tokenizer.token_to_id("<|eos|>")
+
+    input_ids = torch.tensor([prompt_ids], dtype=torch.long)
     output = generate(
         model,
         input_ids,
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,
         top_k=args.top_k,
-        eos_id=tokenizer.token_to_id("<|eos|>"),
+        eos_id=stop_id,
         use_cache=not args.no_cache,
     )
 
     print(f"Prompt : {args.prompt}")
-    print(f"Sinh ra: {tokenizer.decode(output[0].tolist())}")
+    if args.chat:
+        print(f"Trả lời: {tokenizer.decode(output[0, len(prompt_ids):].tolist())}")
+    else:
+        print(f"Sinh ra: {tokenizer.decode(output[0].tolist())}")
 
 
 if __name__ == "__main__":
