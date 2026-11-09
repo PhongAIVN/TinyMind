@@ -23,8 +23,13 @@ from trainer.train_config import TrainConfig
 TORCH_DTYPES = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bfloat16}
 CHECKPOINT_NAME = "pretrain.pt"
 
-def build_loader(dataset: PretrainDataset, batch_size: int, seed: int, shuffle: bool) -> DataLoader:
-    """DataLoader có seed cố định, bỏ batch lẻ cuối để mọi batch cùng kích thước."""
+def build_loader(
+    dataset: PretrainDataset, batch_size: int, seed: int, shuffle: bool, pin_memory: bool = False
+) -> DataLoader:
+    """DataLoader có seed cố định, bỏ batch lẻ cuối để mọi batch cùng kích thước.
+
+    pin_memory: đặt batch vào RAM khóa trang để chép sang GPU không đồng bộ (non_blocking).
+    """
     generator = torch.Generator().manual_seed(seed)
     return DataLoader(
         dataset,
@@ -32,6 +37,7 @@ def build_loader(dataset: PretrainDataset, batch_size: int, seed: int, shuffle: 
         shuffle=shuffle,
         drop_last=True,
         generator=generator if shuffle else None,
+        pin_memory=pin_memory,
     )
 
 
@@ -68,12 +74,16 @@ def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = F
         return torch.autocast(device_type=device.type, dtype=dtype) if use_amp else nullcontext()
 
     scaler = torch.amp.GradScaler(device.type, enabled=(use_amp and dtype is torch.float16))
+    on_cuda = device.type == "cuda"
+    if on_cuda:
+        torch.set_float32_matmul_precision("high")  # TF32 cho các phép nhân ma trận còn ở fp32
 
     train_loader = build_loader(
         PretrainDataset(train_config.train_bin, train_config.seq_len),
         train_config.batch_size,
         train_config.seed,
         shuffle=True,
+        pin_memory=on_cuda,
     )
     eval_loader = build_loader(
         PretrainDataset(train_config.eval_bin, train_config.seq_len),
@@ -114,29 +124,32 @@ def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = F
             group["lr"] = lr
 
         optimizer.zero_grad(set_to_none=True)
-        train_loss = 0.0
+        # Giữ loss / grad norm dạng tensor trên GPU, chỉ .item() lúc log:
+        # mỗi .item() bắt CPU chờ GPU, làm GPU rảnh giữa các micro-batch.
+        step_loss = torch.zeros((), device=device)
         for _ in range(train_config.accum_steps):
             x, y = next(batches)
-            x, y = x.to(device), y.to(device)
+            x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
             with autocast():
                 loss = next_token_loss(model(x), y) / train_config.accum_steps
             scaler.scale(loss).backward()
-            train_loss += loss.item()
+            step_loss += loss.detach()
             throughput.update(tokens_per_micro_batch)
 
         scaler.unscale_(optimizer)
-        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), train_config.grad_clip).item()
+        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), train_config.grad_clip)
         scaler.step(optimizer)
         scaler.update()
+        train_loss = step_loss
 
         if (step + 1) % train_config.log_interval == 0:
             print(
                 format_log(
                     step + 1,
                     train_config.max_steps,
-                    train_loss,
+                    train_loss.item(),
                     lr,
-                    grad_norm,
+                    grad_norm.item(),
                     throughput.tokens_per_second(),
                     max_vram_mb(),
                 )
@@ -153,7 +166,7 @@ def train(model_config: ModelConfig, train_config: TrainConfig, resume: bool = F
             )
 
     save_checkpoint(checkpoint_path, model, optimizer, step + 1, model_config, train_config, scaler)
-    return {"step": step + 1, "train_loss": train_loss, "eval_loss": eval_loss}
+    return {"step": step + 1, "train_loss": float(train_loss), "eval_loss": eval_loss}
 
 
 def main() -> None:
