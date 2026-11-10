@@ -113,3 +113,21 @@
     display: none;
   }
 }
+
+.chat-memory {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  margin: 0;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  background-color: var(--surface-container-low);
+  color: var(--on-surface-variant);
+}
+
+.chat-memory .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--primary);
+  user-select: none;
+}

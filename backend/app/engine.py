@@ -24,6 +24,9 @@ ROLES = ("system", "user", "assistant", "tool")
 THINK_ON_PREFILL = "<think>\n"
 THINK_OFF_PREFILL = "<think>\n\n</think>\n"
 MIN_ANSWER_TOKENS = 16
+OLD_ANSWER_TOKENS = 60
+SUMMARY_QUESTION_TOKENS = 24
+ELLIPSIS = "…"
 
 
 class ChatFormat:
@@ -71,17 +74,57 @@ class ChatFormat:
         return self.separator + self.turn("tool", result) + self.headers["assistant"]
 
 
-def fit_history(fmt: ChatFormat, messages: list[dict], prefill: str, max_len: int, max_new: int) -> list[int]:
-    """Drop the oldest turns until prompt + answer budget fits the context window.
+def shorten(fmt: ChatFormat, text: str, max_tokens: int) -> str:
+    """First max_tokens tokens of text, with an ellipsis if anything was cut."""
+    ids = fmt.encode(text)
+    return text if len(ids) <= max_tokens else fmt.decode(ids[:max_tokens]).rstrip() + ELLIPSIS
 
-    Raises ValueError if even the newest message alone leaves fewer than MIN_ANSWER_TOKENS.
+
+def system_text(memories: list[str], earlier_questions: list[str]) -> str:
+    lines = []
+    if memories:
+        lines.append("Thông tin về người dùng: " + "; ".join(memories) + ".")
+    if earlier_questions:
+        lines.append("Trước đó người dùng đã hỏi: " + "; ".join(earlier_questions) + ".")
+    return "\n".join(lines)
+
+
+def build_prompt(
+    fmt: ChatFormat,
+    history: list[dict],
+    user_text: str,
+    prefill: str,
+    max_len: int,
+    max_new: int,
+    memories: list[str] | None = None,
+) -> list[int]:
+    """Fit memories + history + the new question into max_len - max_new tokens.
+
+    Old assistant answers are cut to OLD_ANSWER_TOKENS so more turns fit. When turns still have
+    to go, the oldest are dropped but their questions stay as a one-line summary in the system turn.
+    Shedding order: whole turns, then summary items, then memories (oldest first).
+    Raises ValueError if the new question alone leaves fewer than MIN_ANSWER_TOKENS.
     """
-    start = 0
+    turns = [
+        {**m, "content": shorten(fmt, m["content"], OLD_ANSWER_TOKENS)} if m["role"] == "assistant" else m
+        for m in history
+    ] + [{"role": "user", "content": user_text}]
+    memories = list(memories or [])
+    start, skip_summary, keep_memories = 0, 0, len(memories)
     while True:
-        ids = fmt.prompt(messages[start:], prefill)
-        if len(ids) + max_new <= max_len or start == len(messages) - 1:
+        dropped = [shorten(fmt, m["content"], SUMMARY_QUESTION_TOKENS) for m in turns[:start] if m["role"] == "user"]
+        system = system_text(memories[len(memories) - keep_memories:], dropped[skip_summary:])
+        ids = fmt.prompt(([{"role": "system", "content": system}] if system else []) + turns[start:], prefill)
+        if len(ids) + max_new <= max_len:
+            return ids
+        if start < len(turns) - 1:
+            start += 1
+        elif skip_summary < len(dropped):
+            skip_summary += 1
+        elif keep_memories > 0:
+            keep_memories -= 1
+        else:
             break
-        start += 1
     if max_len - len(ids) < MIN_ANSWER_TOKENS:
         raise ValueError(f"Tin nhắn quá dài: {len(ids)} token, model chỉ đọc được {max_len}")
     return ids

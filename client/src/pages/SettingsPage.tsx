@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { api, type Health } from '../api/client';
+import { api, type Health, type Memory } from '../api/client';
 import BentoCard from '../components/shared/BentoCard';
+import ToggleSwitch from '../components/shared/ToggleSwitch';
 import { DISCLAIMER } from '../config/app_config';
 import { useChatSettings } from '../state/ChatSettings';
 import './SettingsPage.css';
+
+const MEMORY_LABELS: Record<string, string> = {
+  name: 'Tên', age: 'Tuổi', location: 'Sống ở', job: 'Nghề', likes: 'Thích', note: 'Ghi nhớ',
+};
 
 const SettingsPage: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -12,6 +17,22 @@ const SettingsPage: React.FC = () => {
   const [deleteNote, setDeleteNote] = useState('');
   const [health, setHealth] = useState<Health | null>(null);
   const [healthError, setHealthError] = useState('');
+  const [memories, setMemories] = useState<Memory[]>([]);
+
+  const loadMemories = () => {
+    api.memories().then(setMemories).catch(() => setMemories([]));
+  };
+
+  const handleForget = async (memory: Memory) => {
+    await api.forget(memory.id).catch(() => undefined);
+    loadMemories();
+  };
+
+  const handleForgetAll = async () => {
+    if (!window.confirm('Xóa toàn bộ trí nhớ? Không khôi phục được.')) return;
+    await api.forgetAll().catch(() => undefined);
+    loadMemories();
+  };
 
   useEffect(() => {
     if (containerRef.current) {
@@ -24,6 +45,7 @@ const SettingsPage: React.FC = () => {
     api.health()
       .then(setHealth)
       .catch((err: unknown) => setHealthError(err instanceof Error ? err.message : String(err)));
+    loadMemories();
   }, []);
 
   const handleDeleteAll = async () => {
@@ -75,6 +97,44 @@ const SettingsPage: React.FC = () => {
                 aria-label="Max new tokens"
                 onChange={(e) => update({ max_new_tokens: Number(e.target.value) })} />
             </div>
+          </BentoCard>
+
+          <BentoCard className="settings-card-anim col-span-12 setting-card">
+            <div className="card-header-small">
+              <span className="material-symbols-outlined text-primary">bookmark</span>
+              <h3 className="font-label-md uppercase tracking-wider text-on-surface-variant">Trí nhớ</h3>
+            </div>
+            <div className="setting-row">
+              <div className="setting-info">
+                <p className="font-label-md font-semibold text-on-surface">Ghi nhớ thông tin về bạn</p>
+                <p className="font-label-sm text-on-surface-variant">
+                  Tên, tuổi, nơi sống, nghề, sở thích hoặc câu bắt đầu bằng "Ghi nhớ:". Dùng chung cho mọi cuộc chat.
+                </p>
+              </div>
+              <ToggleSwitch checked={options.use_memory} onChange={(checked) => update({ use_memory: checked })} />
+            </div>
+            <div className="divider"></div>
+            {memories.length === 0 ? (
+              <p className="font-label-sm text-on-surface-variant">Chưa nhớ gì.</p>
+            ) : (
+              <ul className="memory-list">
+                {memories.map((memory) => (
+                  <li key={memory.id} className="memory-item font-label-md">
+                    <span className="memory-kind">{MEMORY_LABELS[memory.kind] ?? memory.kind}</span>
+                    <span className="memory-value">{memory.value}</span>
+                    <button type="button" className="memory-delete" title="Quên" onClick={() => handleForget(memory)}>
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {memories.length > 0 && (
+              <button type="button" className="delete-activity-btn group" onClick={handleForgetAll}>
+                <span className="font-label-md text-on-surface">Xóa toàn bộ trí nhớ</span>
+                <span className="material-symbols-outlined text-on-surface-variant icon">chevron_right</span>
+              </button>
+            )}
           </BentoCard>
 
           <BentoCard className="settings-card-anim col-span-6 setting-card">

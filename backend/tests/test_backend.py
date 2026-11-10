@@ -4,7 +4,8 @@ import pytest
 from tokenizers import Tokenizer
 
 from app.db import ChatStore
-from app.engine import ChatFormat, fit_history
+from app.engine import ChatFormat, build_prompt
+from app.memory import extract_facts, recall_answer
 from app.harness import parse_tool_call
 from app.settings import TOKENIZER_PATH
 from mcp_servers.basic_tools import calculator
@@ -39,17 +40,52 @@ def test_prompt_matches_training_template(fmt):
     assert fmt.decode(ids) == "<|bos|><|im_start|>user\nXin chào<|im_end|>\n<|im_start|>assistant\n"
 
 
-def test_fit_history_drops_oldest_turns_first(fmt):
-    old = [{"role": "user", "content": "câu cũ " * 100}, {"role": "assistant", "content": "trả lời " * 100}]
-    newest = {"role": "user", "content": "câu mới"}
-    ids = fit_history(fmt, old + [newest], "", max_len=128, max_new=32)
+def test_build_prompt_shortens_old_answers(fmt):
+    history = [{"role": "user", "content": "Kể chuyện"}, {"role": "assistant", "content": "ngày xưa " * 100}]
+    text = fmt.decode(build_prompt(fmt, history, "Tiếp đi", "", max_len=512, max_new=100))
+    assert "Kể chuyện" in text and text.count("ngày xưa") < 40 and "…" in text
+
+
+def test_build_prompt_drops_oldest_turns_but_keeps_their_questions(fmt):
+    history = [{"role": "user", "content": "câu hỏi đầu " + "dài " * 80}, {"role": "assistant", "content": "trả lời"},
+               {"role": "user", "content": "câu hai"}, {"role": "assistant", "content": "đáp hai"}]
+    ids = build_prompt(fmt, history, "câu mới", "", max_len=128, max_new=32)
+    text = fmt.decode(ids)
     assert len(ids) + 32 <= 128
-    assert fmt.decode(ids).startswith("<|bos|><|im_start|>user\ncâu mới")
+    assert "Trước đó người dùng đã hỏi: câu hỏi đầu" in text
+    assert text.rstrip().endswith("user\ncâu mới<|im_end|>\n<|im_start|>assistant")
 
 
-def test_fit_history_rejects_message_that_cannot_fit(fmt):
+def test_build_prompt_puts_memories_in_system_turn(fmt):
+    text = fmt.decode(build_prompt(fmt, [], "Tên mình là gì?", "", 512, 100, ["Tên: Phong"]))
+    assert text.startswith("<|bos|><|im_start|>system\nThông tin về người dùng: Tên: Phong.<|im_end|>")
+
+
+def test_build_prompt_rejects_message_that_cannot_fit(fmt):
     with pytest.raises(ValueError):
-        fit_history(fmt, [{"role": "user", "content": "rất dài " * 200}], "", max_len=128, max_new=32)
+        build_prompt(fmt, [], "rất dài " * 200, "", max_len=128, max_new=32)
+
+
+@pytest.mark.parametrize("message, expected", [
+    ("Mình tên là Phong, mình 22 tuổi", ["Tên: Phong", "Tuổi: 22"]),
+    ("Tôi tên Phong và tôi thích bóng đá", ["Tên: Phong", "Thích: bóng đá"]),
+    ("Mình đang sống ở Hà Nội", ["Sống ở: Hà Nội"]),
+    ("Ghi nhớ: thứ 6 có họp", ["Ghi nhớ: thứ 6 có họp"]),
+    ("Tôi tên gì?", []),
+    ("Nhớ mẹ quá", []),
+])
+def test_extract_facts(message, expected):
+    assert [fact.text for fact in extract_facts(message)] == expected
+
+
+def test_memory_single_valued_kind_replaces_old_value(tmp_path):
+    store = ChatStore(tmp_path / "chat.db")
+    store.remember("age", "22", single_valued=True)
+    store.remember("age", "23", single_valued=True)
+    store.remember("likes", "AI", single_valued=False)
+    store.remember("likes", "ai", single_valued=False)
+    assert [(m["kind"], m["value"]) for m in store.list_memories()] == [("age", "23"), ("likes", "ai")]
+    assert store.forget_all() == 2
 
 
 def test_chat_store_roundtrip_and_cascade_delete(tmp_path):
@@ -63,3 +99,20 @@ def test_chat_store_roundtrip_and_cascade_delete(tmp_path):
     assert store.rename(conversation["id"], "Mới") and store.list_conversations()[0]["title"] == "Mới"
     assert store.delete(conversation["id"]) and store.get_conversation(conversation["id"]) is None
     assert store.delete_all() == 0
+
+
+def test_recall_answer_uses_only_matching_memories():
+    memories = [{"kind": "name", "value": "Phong"}, {"kind": "age", "value": "22"}]
+    assert recall_answer("Mình bao nhiêu tuổi?", memories) == "Mình nhớ: tuổi 22."
+    assert recall_answer("Bạn nhớ gì về mình?", memories) == "Mình nhớ: tên Phong; tuổi 22."
+    assert recall_answer("Mình sống ở đâu?", memories) is None
+    assert recall_answer("Thủ đô của Pháp là gì?", memories) is None
+
+
+@pytest.mark.parametrize("message, expected", [
+    ("Mình tên là Phong, mình 22 tuổi và sống ở Hà Nội", ["Tên: Phong", "Tuổi: 22", "Sống ở: Hà Nội"]),
+    ("Tên của mình là gì vậy bạn", []),
+    ("Mình thích ăn gì nhỉ", []),
+])
+def test_extract_facts_handles_questions_without_question_mark(message, expected):
+    assert [fact.text for fact in extract_facts(message)] == expected

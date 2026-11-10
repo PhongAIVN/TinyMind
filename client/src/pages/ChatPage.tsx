@@ -35,6 +35,7 @@ const ChatPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
+  const [memoryNote, setMemoryNote] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   // Id this page created mid-stream: navigating to it must not reload (and wipe) the live reply.
@@ -67,6 +68,7 @@ const ChatPage: React.FC = () => {
 
   const send = async (text: string) => {
     setError('');
+    setMemoryNote('');
     setIsBusy(true);
     const controller = new AbortController();
     abortRef.current = controller;
@@ -91,6 +93,8 @@ const ChatPage: React.FC = () => {
           bumpHistory();
         } else if (event.type === 'done') {
           if (event.message) updateReply(() => event.message as Message);
+        } else if (event.type === 'memory') {
+          setMemoryNote(`Đã ghi nhớ: ${event.items.map((m) => m.value).join(', ')}`);
         } else if (event.type === 'error') {
           setError(event.message);
         } else {
@@ -152,6 +156,11 @@ const ChatPage: React.FC = () => {
                   />}
             </ChatBubble>
           ))}
+          {memoryNote && (
+            <p className="chat-memory font-label-md" role="status">
+              <span className="material-symbols-outlined" aria-hidden="true">bookmark</span>{memoryNote}
+            </p>
+          )}
           {error && <p className="chat-error font-label-md" role="alert">{error}</p>}
         </div>
       </div>

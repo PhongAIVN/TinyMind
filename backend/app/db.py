@@ -26,7 +26,14 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, id);
+CREATE TABLE IF NOT EXISTS memories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    value TEXT NOT NULL,
+    created_at REAL NOT NULL
+);
 """
+MAX_MEMORIES = 30
 
 
 class ChatStore:
@@ -96,6 +103,34 @@ class ChatStore:
     def delete_all(self) -> int:
         with self._connect() as db:
             return db.execute("DELETE FROM conversations").rowcount
+
+
+    def remember(self, kind: str, value: str, single_valued: bool) -> dict:
+        """Store a fact. Single-valued kinds replace the old value; exact duplicates are skipped.
+        Keeps only the newest MAX_MEMORIES rows."""
+        with self._connect() as db:
+            if single_valued:
+                db.execute("DELETE FROM memories WHERE kind = ?", (kind,))
+            else:
+                db.execute("DELETE FROM memories WHERE kind = ? AND lower(value) = lower(?)", (kind, value))
+            cursor = db.execute("INSERT INTO memories (kind, value, created_at) VALUES (?, ?, ?)",
+                                (kind, value, time.time()))
+            db.execute("DELETE FROM memories WHERE id NOT IN (SELECT id FROM memories ORDER BY id DESC LIMIT ?)",
+                       (MAX_MEMORIES,))
+            row = db.execute("SELECT * FROM memories WHERE id = ?", (cursor.lastrowid,)).fetchone()
+        return dict(row)
+
+    def list_memories(self) -> list[dict]:
+        with self._connect() as db:
+            return [dict(row) for row in db.execute("SELECT * FROM memories ORDER BY id").fetchall()]
+
+    def forget(self, memory_id: int) -> bool:
+        with self._connect() as db:
+            return db.execute("DELETE FROM memories WHERE id = ?", (memory_id,)).rowcount > 0
+
+    def forget_all(self) -> int:
+        with self._connect() as db:
+            return db.execute("DELETE FROM memories").rowcount
 
 
 def _message(row: sqlite3.Row) -> dict:

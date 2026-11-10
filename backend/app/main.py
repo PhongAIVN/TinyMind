@@ -14,9 +14,10 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.db import ChatStore
-from app.engine import THINK_OFF_PREFILL, THINK_ON_PREFILL, ModelStore, fit_history
+from app.engine import THINK_OFF_PREFILL, THINK_ON_PREFILL, ModelStore, build_prompt
 from app.harness import Reply, run_completion, run_turn
 from app.mcp_hub import McpHub
+from app.memory import LABELS, SINGLE_VALUED, extract_facts, recall_answer
 from app.settings import (
     DB_PATH, DEFAULT_MAX_NEW_TOKENS, DEFAULT_MODEL, DEFAULT_TEMPERATURE, DEFAULT_TOP_K, MAX_NEW_TOKENS_LIMIT,
     MAX_TOOL_TURNS, MCP_CONFIG_PATH, TITLE_LENGTH, VARIANTS,
@@ -32,6 +33,7 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = None
     model: str = DEFAULT_MODEL
     think: bool = True
+    use_memory: bool = True
     temperature: float = Field(DEFAULT_TEMPERATURE, ge=0, le=2)
     top_k: int | None = Field(DEFAULT_TOP_K, ge=1, le=1000)
     max_new_tokens: int = Field(DEFAULT_MAX_NEW_TOKENS, ge=1, le=MAX_NEW_TOKENS_LIMIT)
@@ -99,6 +101,20 @@ def create_app() -> FastAPI:
     def delete_all(request: Request) -> dict:
         return {"deleted": request.app.state.store.delete_all()}
 
+    @app.get("/api/memories")
+    def list_memories(request: Request) -> list[dict]:
+        return request.app.state.store.list_memories()
+
+    @app.delete("/api/memories/{memory_id}")
+    def forget(memory_id: int, request: Request) -> dict:
+        if not request.app.state.store.forget(memory_id):
+            raise HTTPException(404, "memory not found")
+        return {"ok": True}
+
+    @app.delete("/api/memories")
+    def forget_all(request: Request) -> dict:
+        return {"deleted": request.app.state.store.forget_all()}
+
     @app.post("/api/chat")
     def chat(body: ChatRequest, request: Request) -> StreamingResponse:
         state = request.app.state
@@ -140,13 +156,27 @@ def _stream_reply(state, conversation_id: str, user_message: dict, history: list
             else:
                 thinking = variant["think"] and body.think
                 prefill = (THINK_ON_PREFILL if thinking else THINK_OFF_PREFILL) if variant["think"] else ""
-                messages = history + [{"role": "user", "content": body.message}]
-                prompt = fit_history(fmt, messages, prefill, loaded.max_len, body.max_new_tokens)
-                events = run_turn(
-                    loaded, fmt, prompt, thinking=thinking, max_new=body.max_new_tokens,
-                    temperature=body.temperature, top_k=body.top_k, max_tool_turns=MAX_TOOL_TURNS,
-                    run_tool=lambda name, args: anyio.from_thread.run(state.mcp.call, name, args), reply=reply,
-                )
+                stored: list[dict] = []
+                if body.use_memory:
+                    saved = [state.store.remember(f.kind, f.value, f.kind in SINGLE_VALUED)
+                             for f in extract_facts(body.message)]
+                    if saved:
+                        yield sse({"type": "memory", "items": saved})
+                    stored = state.store.list_memories()
+                recalled = recall_answer(body.message, stored)
+                if recalled:
+                    reply.content = recalled
+                    events = iter([{"type": "text", "text": recalled}])
+                else:
+                    memories = [f"{LABELS[m['kind']]}: {m['value']}" for m in stored] if variant.get("memory") else []
+                    prompt = build_prompt(fmt, history, body.message, prefill, loaded.max_len,
+                                          body.max_new_tokens, memories)
+                    events = run_turn(
+                        loaded, fmt, prompt, thinking=thinking, max_new=body.max_new_tokens,
+                        temperature=body.temperature, top_k=body.top_k, max_tool_turns=MAX_TOOL_TURNS,
+                        run_tool=lambda name, args: anyio.from_thread.run(state.mcp.call, name, args),
+                        reply=reply,
+                    )
             for event in events:
                 yield sse(event)
         finished = True

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { api, type ChatOptions, type ModelInfo } from '../api/client';
 
 const STORAGE_KEY = 'tinymind.settings';
-const DEFAULTS: ChatOptions = { model: 'sft', think: true, temperature: 0.7, max_new_tokens: 200 };
+const DEFAULTS: ChatOptions = { model: 'sft', think: true, temperature: 0.7, max_new_tokens: 200, use_memory: true };
 
 interface ChatSettingsValue {
   models: ModelInfo[];

@@ -11,8 +11,11 @@ MCP_CONFIG_PATH = BACKEND_DIR / "mcp_servers.json"
 
 # What each exported variant is for (shown in the client's model picker).
 # chat=False: plain text continuation, no chat template.
+# memory=True: stored user facts go into the prompt. Toy-math variants get confused by them
+# (the tool model turned "Tuổi: 22" into calculator(8 × 22)), so only the general chat model gets them.
 VARIANTS: dict[str, dict] = {
-    "sft": {"label": "TinyMind Chat", "description": "Hỏi đáp chung, code", "chat": True, "think": False, "tools": False},
+    "sft": {"label": "TinyMind Chat", "description": "Hỏi đáp chung, code", "chat": True, "think": False, "tools": False,
+            "memory": True},
     "tool": {"label": "TinyMind Tools", "description": "Gọi tool qua MCP (máy tính)", "chat": True, "think": False, "tools": True},
     "cispo": {"label": "TinyMind Reason", "description": "Toán đồ chơi, có tư duy", "chat": True, "think": True, "tools": False},
     "think": {"label": "TinyMind Think", "description": "Bật/tắt tư duy", "chat": True, "think": True, "tools": False},

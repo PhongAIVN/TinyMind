@@ -44,17 +44,26 @@ export interface Health {
   mcp_errors: Record<string, string>;
 }
 
+export interface Memory {
+  id: number;
+  kind: string;
+  value: string;
+  created_at: number;
+}
+
 export interface ChatOptions {
   model: string;
   think: boolean;
   temperature: number;
   max_new_tokens: number;
+  use_memory: boolean;
 }
 
 export type ChatEvent =
   | { type: 'start'; conversation_id: string; user_message: Message }
   | { type: 'think' | 'text'; text: string }
   | ({ type: 'tool' } & ToolCall)
+  | { type: 'memory'; items: Memory[] }
   | { type: 'done'; message: Message | null }
   | { type: 'error'; message: string };
 
@@ -81,6 +90,9 @@ export const api = {
     }),
   remove: (id: string) => request(`/conversations/${id}`, { method: 'DELETE' }),
   removeAll: () => request<{ deleted: number }>('/conversations', { method: 'DELETE' }),
+  memories: () => request<Memory[]>('/memories'),
+  forget: (id: number) => request(`/memories/${id}`, { method: 'DELETE' }),
+  forgetAll: () => request<{ deleted: number }>('/memories', { method: 'DELETE' }),
 };
 
 /** POST /api/chat and call onEvent for every server-sent event until the stream ends. */
