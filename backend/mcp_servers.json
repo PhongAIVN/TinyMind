@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "basic": {
+      "command": "python",
+      "args": ["mcp_servers/basic_tools.py"]
+    }
+  }
+}

@@ -28,3 +28,7 @@ Thumbs.db
 *.zip
 /temp
 /hf
+
+# Backend runtime data (chat history)
+/backend/data/
+/backend/models/.cache/
