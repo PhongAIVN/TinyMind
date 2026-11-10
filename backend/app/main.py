@@ -17,7 +17,7 @@ from app.db import ChatStore
 from app.engine import THINK_OFF_PREFILL, THINK_ON_PREFILL, ModelStore, build_prompt
 from app.harness import Reply, run_completion, run_turn
 from app.mcp_hub import McpHub
-from app.memory import LABELS, SINGLE_VALUED, extract_facts, recall_answer
+from app.memory import SINGLE_VALUED, extract_facts, recall_answer
 from app.settings import (
     DB_PATH, DEFAULT_MAX_NEW_TOKENS, DEFAULT_MODEL, DEFAULT_TEMPERATURE, DEFAULT_TOP_K, MAX_NEW_TOKENS_LIMIT,
     MAX_TOOL_TURNS, MCP_CONFIG_PATH, TITLE_LENGTH, VARIANTS,
@@ -168,9 +168,7 @@ def _stream_reply(state, conversation_id: str, user_message: dict, history: list
                     reply.content = recalled
                     events = iter([{"type": "text", "text": recalled}])
                 else:
-                    memories = [f"{LABELS[m['kind']]}: {m['value']}" for m in stored] if variant.get("memory") else []
-                    prompt = build_prompt(fmt, history, body.message, prefill, loaded.max_len,
-                                          body.max_new_tokens, memories)
+                    prompt = build_prompt(fmt, history, body.message, prefill, loaded.max_len, body.max_new_tokens)
                     events = run_turn(
                         loaded, fmt, prompt, thinking=thinking, max_new=body.max_new_tokens,
                         temperature=body.temperature, top_k=body.top_k, max_tool_turns=MAX_TOOL_TURNS,

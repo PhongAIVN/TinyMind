@@ -4,7 +4,7 @@ import pytest
 from tokenizers import Tokenizer
 
 from app.db import ChatStore
-from app.engine import ChatFormat, build_prompt
+from app.engine import ChatFormat, build_prompt, drop_boilerplate
 from app.memory import extract_facts, recall_answer
 from app.harness import parse_tool_call
 from app.settings import TOKENIZER_PATH
@@ -56,9 +56,9 @@ def test_build_prompt_drops_oldest_turns_but_keeps_their_questions(fmt):
     assert text.rstrip().endswith("user\ncâu mới<|im_end|>\n<|im_start|>assistant")
 
 
-def test_build_prompt_puts_memories_in_system_turn(fmt):
-    text = fmt.decode(build_prompt(fmt, [], "Tên mình là gì?", "", 512, 100, ["Tên: Phong"]))
-    assert text.startswith("<|bos|><|im_start|>system\nThông tin về người dùng: Tên: Phong.<|im_end|>")
+def test_build_prompt_has_no_system_turn_when_nothing_dropped(fmt):
+    text = fmt.decode(build_prompt(fmt, [], "Tên mình là gì?", "", 512, 100))
+    assert text.startswith("<|bos|><|im_start|>user\n")
 
 
 def test_build_prompt_rejects_message_that_cannot_fit(fmt):
@@ -116,3 +116,12 @@ def test_recall_answer_uses_only_matching_memories():
 ])
 def test_extract_facts_handles_questions_without_question_mark(message, expected):
     assert [fact.text for fact in extract_facts(message)] == expected
+
+
+def test_drop_boilerplate_removes_filler_answer_and_its_question():
+    history = [
+        {"role": "user", "content": "Thủ đô của Pháp?"}, {"role": "assistant", "content": "Paris."},
+        {"role": "user", "content": "Chính trị?"},
+        {"role": "assistant", "content": "Xin lỗi, là một mô hình ngôn ngữ AI, tôi không thể..."},
+    ]
+    assert drop_boilerplate(history) == history[:2]

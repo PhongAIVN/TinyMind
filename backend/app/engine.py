@@ -6,6 +6,7 @@ Tool results go in a "tool" turn wrapped in <tool_response>...</tool_response>.
 """
 
 import json
+import re
 import threading
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -27,6 +28,10 @@ MIN_ANSWER_TOKENS = 16
 OLD_ANSWER_TOKENS = 60
 SUMMARY_QUESTION_TOKENS = 24
 ELLIPSIS = "…"
+# Filler the SFT data taught the model (translated OpenOrca/Alpaca "As an AI language model..." replies).
+BOILERPLATE = re.compile(
+    r"xin lỗi|rất tiếc|(?:mô hình|người mẫu) ngôn ngữ|với tư cách là một (?:AI|trợ lý)|\[tên của bạn\]", re.IGNORECASE
+)
 
 
 class ChatFormat:
@@ -80,13 +85,24 @@ def shorten(fmt: ChatFormat, text: str, max_tokens: int) -> str:
     return text if len(ids) <= max_tokens else fmt.decode(ids[:max_tokens]).rstrip() + ELLIPSIS
 
 
-def system_text(memories: list[str], earlier_questions: list[str]) -> str:
-    lines = []
-    if memories:
-        lines.append("Thông tin về người dùng: " + "; ".join(memories) + ".")
-    if earlier_questions:
-        lines.append("Trước đó người dùng đã hỏi: " + "; ".join(earlier_questions) + ".")
-    return "\n".join(lines)
+def drop_boilerplate(history: list[dict]) -> list[dict]:
+    """Remove each assistant answer that is "xin lỗi / là một mô hình ngôn ngữ AI" filler, with its question.
+
+    Left in the history, the 57M model copies the pattern into later answers: replaying 6 questions
+    as one chat gave boilerplate in 9/24 answers with full history vs 3/24 with none.
+    """
+    kept: list[dict] = []
+    for message in history:
+        if message["role"] == "assistant" and BOILERPLATE.search(message["content"]):
+            if kept and kept[-1]["role"] == "user":
+                kept.pop()
+            continue
+        kept.append(message)
+    return kept
+
+
+def system_text(earlier_questions: list[str]) -> str:
+    return "Trước đó người dùng đã hỏi: " + "; ".join(earlier_questions) + "." if earlier_questions else ""
 
 
 def build_prompt(
@@ -96,24 +112,24 @@ def build_prompt(
     prefill: str,
     max_len: int,
     max_new: int,
-    memories: list[str] | None = None,
 ) -> list[int]:
-    """Fit memories + history + the new question into max_len - max_new tokens.
+    """Fit history + the new question into max_len - max_new tokens.
 
     Old assistant answers are cut to OLD_ANSWER_TOKENS so more turns fit. When turns still have
     to go, the oldest are dropped but their questions stay as a one-line summary in the system turn.
-    Shedding order: whole turns, then summary items, then memories (oldest first).
+    Shedding order: whole turns, then summary items (oldest first).
+    User memories are deliberately NOT put in the prompt: with them the sft model gave the
+    "là một mô hình ngôn ngữ AI" boilerplate 3x as often and mixed the facts into unrelated answers.
     Raises ValueError if the new question alone leaves fewer than MIN_ANSWER_TOKENS.
     """
     turns = [
         {**m, "content": shorten(fmt, m["content"], OLD_ANSWER_TOKENS)} if m["role"] == "assistant" else m
-        for m in history
+        for m in drop_boilerplate(history)
     ] + [{"role": "user", "content": user_text}]
-    memories = list(memories or [])
-    start, skip_summary, keep_memories = 0, 0, len(memories)
+    start, skip_summary = 0, 0
     while True:
         dropped = [shorten(fmt, m["content"], SUMMARY_QUESTION_TOKENS) for m in turns[:start] if m["role"] == "user"]
-        system = system_text(memories[len(memories) - keep_memories:], dropped[skip_summary:])
+        system = system_text(dropped[skip_summary:])
         ids = fmt.prompt(([{"role": "system", "content": system}] if system else []) + turns[start:], prefill)
         if len(ids) + max_new <= max_len:
             return ids
@@ -121,8 +137,6 @@ def build_prompt(
             start += 1
         elif skip_summary < len(dropped):
             skip_summary += 1
-        elif keep_memories > 0:
-            keep_memories -= 1
         else:
             break
     if max_len - len(ids) < MIN_ANSWER_TOKENS:
