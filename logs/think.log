@@ -1,0 +1,92 @@
+
+$ C:\SLM\.venv\Scripts\python.exe -u -m trainer.train_sft --model-config configs/model_50m.json --train-config configs/think_50m.json --checkpoint-name think.pt
+SFT: 12,000 hội thoại train (bỏ 0), 300 eval | 800 bước = 2.13 epoch
+step     10/800 | loss  3.456 | lr 2.50e-05 | gnorm 24.577 |    23,097 tok/s | vram   3888 MB
+step     20/800 | loss  1.725 | lr 5.00e-05 | gnorm  7.095 |    47,983 tok/s | vram   3888 MB
+step     30/800 | loss  1.295 | lr 7.50e-05 | gnorm  6.066 |    47,992 tok/s | vram   3888 MB
+step     40/800 | loss  0.893 | lr 1.00e-04 | gnorm  5.857 |    47,946 tok/s | vram   3888 MB
+step     50/800 | loss  0.580 | lr 1.00e-04 | gnorm  4.375 |    47,829 tok/s | vram   3888 MB
+step     60/800 | loss  0.465 | lr 9.99e-05 | gnorm  2.719 |    48,020 tok/s | vram   3888 MB
+step     70/800 | loss  0.334 | lr 9.97e-05 | gnorm  1.911 |    48,069 tok/s | vram   3888 MB
+step     80/800 | loss  0.305 | lr 9.94e-05 | gnorm  2.212 |    48,220 tok/s | vram   3888 MB
+step     90/800 | loss  0.278 | lr 9.91e-05 | gnorm  1.656 |    48,382 tok/s | vram   3888 MB
+step    100/800 | loss  0.221 | lr 9.87e-05 | gnorm  1.254 |    48,162 tok/s | vram   3888 MB
+step    100 | val loss  0.260
+step    110/800 | loss  0.256 | lr 9.82e-05 | gnorm  1.924 |    41,370 tok/s | vram   3888 MB
+step    120/800 | loss  0.245 | lr 9.76e-05 | gnorm  1.586 |    48,202 tok/s | vram   3888 MB
+step    130/800 | loss  0.262 | lr 9.70e-05 | gnorm  1.414 |    48,236 tok/s | vram   3888 MB
+step    140/800 | loss  0.239 | lr 9.63e-05 | gnorm  1.109 |    48,352 tok/s | vram   3888 MB
+step    150/800 | loss  0.255 | lr 9.55e-05 | gnorm  1.193 |    48,270 tok/s | vram   3888 MB
+step    160/800 | loss  0.215 | lr 9.47e-05 | gnorm  1.439 |    48,180 tok/s | vram   3888 MB
+step    170/800 | loss  0.260 | lr 9.38e-05 | gnorm  1.545 |    48,111 tok/s | vram   3888 MB
+step    180/800 | loss  0.218 | lr 9.28e-05 | gnorm  1.154 |    48,056 tok/s | vram   3888 MB
+step    190/800 | loss  0.205 | lr 9.17e-05 | gnorm  1.250 |    48,173 tok/s | vram   3888 MB
+step    200/800 | loss  0.215 | lr 9.06e-05 | gnorm  1.442 |    48,291 tok/s | vram   3888 MB
+step    200 | val loss  0.193
+step    210/800 | loss  0.237 | lr 8.95e-05 | gnorm  2.011 |    41,671 tok/s | vram   3888 MB
+step    220/800 | loss  0.184 | lr 8.82e-05 | gnorm  1.367 |    48,278 tok/s | vram   3888 MB
+step    230/800 | loss  0.180 | lr 8.70e-05 | gnorm  1.785 |    48,221 tok/s | vram   3888 MB
+step    240/800 | loss  0.179 | lr 8.56e-05 | gnorm  1.945 |    48,294 tok/s | vram   3888 MB
+step    250/800 | loss  0.146 | lr 8.42e-05 | gnorm  1.221 |    48,219 tok/s | vram   3888 MB
+step    260/800 | loss  0.190 | lr 8.28e-05 | gnorm  1.326 |    48,113 tok/s | vram   3888 MB
+step    270/800 | loss  0.184 | lr 8.13e-05 | gnorm  1.721 |    48,242 tok/s | vram   3888 MB
+step    280/800 | loss  0.210 | lr 7.98e-05 | gnorm  1.335 |    48,377 tok/s | vram   3888 MB
+step    290/800 | loss  0.199 | lr 7.82e-05 | gnorm  1.103 |    48,348 tok/s | vram   3888 MB
+step    300/800 | loss  0.162 | lr 7.66e-05 | gnorm  0.965 |    48,386 tok/s | vram   3888 MB
+step    300 | val loss  0.129
+step    310/800 | loss  0.125 | lr 7.49e-05 | gnorm  0.944 |    41,745 tok/s | vram   3888 MB
+step    320/800 | loss  0.156 | lr 7.32e-05 | gnorm  1.072 |    48,266 tok/s | vram   3888 MB
+step    330/800 | loss  0.189 | lr 7.15e-05 | gnorm  0.947 |    48,167 tok/s | vram   3888 MB
+step    340/800 | loss  0.181 | lr 6.98e-05 | gnorm  1.259 |    48,251 tok/s | vram   3888 MB
+step    350/800 | loss  0.160 | lr 6.80e-05 | gnorm  0.889 |    48,250 tok/s | vram   3888 MB
+step    360/800 | loss  0.181 | lr 6.62e-05 | gnorm  1.163 |    48,243 tok/s | vram   3888 MB
+step    370/800 | loss  0.178 | lr 6.44e-05 | gnorm  0.919 |    48,209 tok/s | vram   3888 MB
+step    380/800 | loss  0.175 | lr 6.26e-05 | gnorm  1.204 |    48,298 tok/s | vram   3888 MB
+step    390/800 | loss  0.157 | lr 6.08e-05 | gnorm  1.008 |    47,717 tok/s | vram   3888 MB
+step    400/800 | loss  0.148 | lr 5.89e-05 | gnorm  1.100 |    48,411 tok/s | vram   3888 MB
+step    400 | val loss  0.107
+step    410/800 | loss  0.147 | lr 5.70e-05 | gnorm  1.169 |    24,953 tok/s | vram   3888 MB
+step    420/800 | loss  0.144 | lr 5.52e-05 | gnorm  1.005 |    48,254 tok/s | vram   3888 MB
+step    430/800 | loss  0.159 | lr 5.33e-05 | gnorm  0.910 |    47,814 tok/s | vram   3888 MB
+step    440/800 | loss  0.119 | lr 5.15e-05 | gnorm  1.137 |    47,954 tok/s | vram   3888 MB
+step    450/800 | loss  0.119 | lr 4.96e-05 | gnorm  0.977 |    48,188 tok/s | vram   3888 MB
+step    460/800 | loss  0.152 | lr 4.78e-05 | gnorm  1.040 |    47,766 tok/s | vram   3888 MB
+step    470/800 | loss  0.150 | lr 4.59e-05 | gnorm  1.145 |    48,018 tok/s | vram   3888 MB
+step    480/800 | loss  0.105 | lr 4.41e-05 | gnorm  0.907 |    48,173 tok/s | vram   3888 MB
+step    490/800 | loss  0.104 | lr 4.23e-05 | gnorm  0.780 |    48,108 tok/s | vram   3888 MB
+step    500/800 | loss  0.146 | lr 4.06e-05 | gnorm  0.892 |    47,829 tok/s | vram   3888 MB
+step    500 | val loss  0.086
+step    510/800 | loss  0.145 | lr 3.88e-05 | gnorm  1.012 |    41,763 tok/s | vram   3888 MB
+step    520/800 | loss  0.171 | lr 3.71e-05 | gnorm  1.244 |    48,244 tok/s | vram   3888 MB
+step    530/800 | loss  0.111 | lr 3.54e-05 | gnorm  0.776 |    48,125 tok/s | vram   3888 MB
+step    540/800 | loss  0.122 | lr 3.37e-05 | gnorm  0.645 |    48,101 tok/s | vram   3888 MB
+step    550/800 | loss  0.105 | lr 3.21e-05 | gnorm  0.872 |    48,007 tok/s | vram   3888 MB
+step    560/800 | loss  0.127 | lr 3.05e-05 | gnorm  0.858 |    48,202 tok/s | vram   3888 MB
+step    570/800 | loss  0.132 | lr 2.90e-05 | gnorm  0.828 |    48,033 tok/s | vram   3888 MB
+step    580/800 | loss  0.140 | lr 2.75e-05 | gnorm  1.054 |    47,912 tok/s | vram   3888 MB
+step    590/800 | loss  0.110 | lr 2.61e-05 | gnorm  0.788 |    47,992 tok/s | vram   3888 MB
+step    600/800 | loss  0.099 | lr 2.47e-05 | gnorm  0.810 |    47,860 tok/s | vram   3888 MB
+step    600 | val loss  0.073
+step    610/800 | loss  0.116 | lr 2.33e-05 | gnorm  0.779 |    41,568 tok/s | vram   3888 MB
+step    620/800 | loss  0.134 | lr 2.20e-05 | gnorm  1.099 |    48,031 tok/s | vram   3888 MB
+step    630/800 | loss  0.098 | lr 2.08e-05 | gnorm  1.088 |    47,913 tok/s | vram   3888 MB
+step    640/800 | loss  0.110 | lr 1.96e-05 | gnorm  0.741 |    47,981 tok/s | vram   3888 MB
+step    650/800 | loss  0.105 | lr 1.85e-05 | gnorm  0.937 |    48,116 tok/s | vram   3888 MB
+step    660/800 | loss  0.112 | lr 1.74e-05 | gnorm  0.716 |    47,740 tok/s | vram   3888 MB
+step    670/800 | loss  0.109 | lr 1.64e-05 | gnorm  0.778 |    48,030 tok/s | vram   3888 MB
+step    680/800 | loss  0.102 | lr 1.55e-05 | gnorm  0.693 |    47,994 tok/s | vram   3888 MB
+step    690/800 | loss  0.106 | lr 1.47e-05 | gnorm  1.053 |    48,055 tok/s | vram   3888 MB
+step    700/800 | loss  0.117 | lr 1.39e-05 | gnorm  1.480 |    48,285 tok/s | vram   3888 MB
+step    700 | val loss  0.067
+step    710/800 | loss  0.092 | lr 1.31e-05 | gnorm  0.659 |    41,298 tok/s | vram   3888 MB
+step    720/800 | loss  0.096 | lr 1.25e-05 | gnorm  0.797 |    48,028 tok/s | vram   3888 MB
+step    730/800 | loss  0.098 | lr 1.19e-05 | gnorm  0.752 |    48,044 tok/s | vram   3888 MB
+step    740/800 | loss  0.089 | lr 1.14e-05 | gnorm  0.608 |    48,110 tok/s | vram   3888 MB
+step    750/800 | loss  0.119 | lr 1.10e-05 | gnorm  1.087 |    47,663 tok/s | vram   3888 MB
+step    760/800 | loss  0.091 | lr 1.06e-05 | gnorm  0.608 |    47,778 tok/s | vram   3888 MB
+step    770/800 | loss  0.091 | lr 1.04e-05 | gnorm  0.713 |    47,778 tok/s | vram   3888 MB
+step    780/800 | loss  0.106 | lr 1.02e-05 | gnorm  0.929 |    48,240 tok/s | vram   3888 MB
+step    790/800 | loss  0.080 | lr 1.00e-05 | gnorm  0.592 |    48,150 tok/s | vram   3888 MB
+step    800/800 | loss  0.089 | lr 1.00e-05 | gnorm  1.046 |    48,027 tok/s | vram   3888 MB
+step    800 | val loss  0.065
+Xong: {'step': 800, 'train_loss': 0.08853521198034286, 'eval_loss': 0.06543275490403175}

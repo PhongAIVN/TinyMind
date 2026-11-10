@@ -1,0 +1,13 @@
+
+$ C:\SLM\.venv\Scripts\python.exe -u -m scripts.build_sft_data --skip-missing
+openorca_vi                        20,000 hội thoại
+alpaca_gpt4_vi                     20,000 hội thoại
+vi_alpaca                          20,000 hội thoại
+metamath_vi                        20,000 hội thoại
+viquad                             19,238 hội thoại
+code_vi                             8,934 hội thoại
+python_instruct                    18,612 hội thoại
+chat_alpaca_vi                     12,697 hội thoại
+ecommerce_chat_vi                   1,482 hội thoại
+ultrachat_vi                       20,000 hội thoại
+Tổng: train 160,160 | eval 803 -> dataset/sft

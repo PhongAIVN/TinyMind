@@ -1,0 +1,53 @@
+
+$ C:\SLM\.venv\Scripts\python.exe -u -m trainer.train_dpo --model-config configs/model_50m.json --train-config configs/dpo_50m.json --beta 0.1 --sft-weight 1.0
+DPO β=0.1 sft_weight=1.0: 8,000 cặp train, 300 cặp eval (loss ban đầu phải ≈ ln 2 = 0.693)
+step     10/400 | loss  1.074 | lr 5.00e-06 | gnorm  7.674 |       667 tok/s | vram   2729 MB
+step     20/400 | loss  1.044 | lr 1.00e-05 | gnorm  7.660 |    15,400 tok/s | vram   2729 MB
+step     30/400 | loss  1.169 | lr 9.99e-06 | gnorm  5.799 |    15,161 tok/s | vram   2729 MB
+step     40/400 | loss  1.187 | lr 9.94e-06 | gnorm 11.094 |    15,505 tok/s | vram   2729 MB
+step     50/400 | loss  1.146 | lr 9.87e-06 | gnorm  7.760 |    15,041 tok/s | vram   2729 MB
+step     50 | val loss  1.206
+step     60/400 | loss  1.118 | lr 9.77e-06 | gnorm  7.503 |    12,270 tok/s | vram   2729 MB
+step     70/400 | loss  1.182 | lr 9.64e-06 | gnorm  9.953 |    15,079 tok/s | vram   2729 MB
+step     80/400 | loss  1.014 | lr 9.48e-06 | gnorm 11.071 |    15,173 tok/s | vram   2729 MB
+step     90/400 | loss  1.049 | lr 9.29e-06 | gnorm  6.210 |    15,378 tok/s | vram   2729 MB
+step    100/400 | loss  1.077 | lr 9.07e-06 | gnorm  6.428 |    15,348 tok/s | vram   2729 MB
+step    100 | val loss  1.180
+step    110/400 | loss  1.120 | lr 8.84e-06 | gnorm 16.505 |    12,305 tok/s | vram   2729 MB
+step    120/400 | loss  1.102 | lr 8.58e-06 | gnorm  8.145 |    15,357 tok/s | vram   2729 MB
+step    130/400 | loss  1.089 | lr 8.29e-06 | gnorm  5.656 |    15,349 tok/s | vram   2729 MB
+step    140/400 | loss  0.955 | lr 7.99e-06 | gnorm 11.542 |    15,114 tok/s | vram   2729 MB
+step    150/400 | loss  1.048 | lr 7.67e-06 | gnorm  8.455 |    15,385 tok/s | vram   2729 MB
+step    150 | val loss  1.164
+step    160/400 | loss  0.944 | lr 7.34e-06 | gnorm  6.278 |    12,267 tok/s | vram   2729 MB
+step    170/400 | loss  1.035 | lr 7.00e-06 | gnorm  5.256 |    15,502 tok/s | vram   2729 MB
+step    180/400 | loss  1.041 | lr 6.64e-06 | gnorm  7.057 |    14,855 tok/s | vram   2729 MB
+step    190/400 | loss  1.040 | lr 6.28e-06 | gnorm  8.397 |    15,325 tok/s | vram   2729 MB
+step    200/400 | loss  0.945 | lr 5.91e-06 | gnorm  4.938 |    15,437 tok/s | vram   2729 MB
+step    200 | val loss  1.163
+step    210/400 | loss  0.901 | lr 5.54e-06 | gnorm  9.619 |     6,781 tok/s | vram   2729 MB
+step    220/400 | loss  0.878 | lr 5.17e-06 | gnorm  7.329 |    14,997 tok/s | vram   2729 MB
+step    230/400 | loss  0.974 | lr 4.80e-06 | gnorm  8.250 |    15,620 tok/s | vram   2729 MB
+step    240/400 | loss  1.050 | lr 4.43e-06 | gnorm  7.510 |    15,388 tok/s | vram   2729 MB
+step    250/400 | loss  0.989 | lr 4.07e-06 | gnorm  7.628 |    15,236 tok/s | vram   2729 MB
+step    250 | val loss  1.142
+step    260/400 | loss  0.935 | lr 3.73e-06 | gnorm  6.314 |    12,429 tok/s | vram   2729 MB
+step    270/400 | loss  1.007 | lr 3.39e-06 | gnorm 12.335 |    15,122 tok/s | vram   2729 MB
+step    280/400 | loss  0.946 | lr 3.07e-06 | gnorm  7.181 |    15,397 tok/s | vram   2729 MB
+step    290/400 | loss  0.925 | lr 2.77e-06 | gnorm  7.184 |    15,623 tok/s | vram   2729 MB
+step    300/400 | loss  1.064 | lr 2.48e-06 | gnorm  7.272 |    15,230 tok/s | vram   2729 MB
+step    300 | val loss  1.137
+step    310/400 | loss  0.950 | lr 2.21e-06 | gnorm 12.596 |    12,267 tok/s | vram   2729 MB
+step    320/400 | loss  0.959 | lr 1.97e-06 | gnorm  6.091 |    15,275 tok/s | vram   2729 MB
+step    330/400 | loss  0.910 | lr 1.75e-06 | gnorm 10.134 |    15,349 tok/s | vram   2729 MB
+step    340/400 | loss  0.974 | lr 1.56e-06 | gnorm 11.905 |    15,353 tok/s | vram   2729 MB
+step    350/400 | loss  1.002 | lr 1.39e-06 | gnorm  5.945 |    15,393 tok/s | vram   2729 MB
+step    350 | val loss  1.115
+step    360/400 | loss  0.833 | lr 1.26e-06 | gnorm 12.582 |    12,403 tok/s | vram   2729 MB
+step    370/400 | loss  1.086 | lr 1.15e-06 | gnorm 12.177 |    14,979 tok/s | vram   2729 MB
+step    380/400 | loss  1.095 | lr 1.07e-06 | gnorm 25.746 |    15,263 tok/s | vram   2729 MB
+step    390/400 | loss  1.039 | lr 1.02e-06 | gnorm 13.272 |    15,317 tok/s | vram   2729 MB
+step    400/400 | loss  1.077 | lr 1.00e-06 | gnorm 14.355 |    15,246 tok/s | vram   2729 MB
+step    400 | val loss  1.112
+Xong: {'step': 400, 'train_loss': 1.077292561531067, 'eval_loss': 1.1124405145645142}
+Eval: chosen thắng 72.0% cặp, reward chênh trung bình 0.300

@@ -1,0 +1,3 @@
+
+$ C:\SLM\.venv\Scripts\python.exe -u -m scripts.build_toy_tools
+train 8,000 | eval 300 -> dataset/toy_tools

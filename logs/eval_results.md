@@ -1,0 +1,13 @@
+| Checkpoint | Chế độ | Đúng | Độ chính xác |
+| ---------- | ------ | ---- | ------------ |
+| sft.pt | plain | 18/300 | 6.0% |
+| lora_merged.pt | plain | 66/300 | 22.0% |
+| dpo.pt | plain | 66/300 | 22.0% |
+| tool.pt | tools | 300/300 | 100.0% |
+| think.pt | no_think | 115/300 | 38.3% |
+| think.pt | think | 202/300 | 67.3% |
+| student.pt | think | 174/300 | 58.0% |
+| grpo.pt | think | 210/300 | 70.0% |
+| cispo.pt | think | 212/300 | 70.7% |
+| ppo.pt | think | 206/300 | 68.7% |
+| agentic.pt | tools | 300/300 | 100.0% |

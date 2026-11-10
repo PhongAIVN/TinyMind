@@ -1,0 +1,71 @@
+
+$ C:\SLM\.venv\Scripts\python.exe -u -m trainer.train_lora --model-config configs/model_50m.json --train-config configs/lora_50m.json --rank 8 --alpha 16
+LoRA r=8 alpha=16.0 trên 24 lớp | học 196,608/57,487,872 tham số (0.34%)
+step     10/600 | loss  1.648 | lr 1.67e-04 | gnorm  1.819 |     1,325 tok/s | vram   1647 MB
+step     20/600 | loss  0.880 | lr 3.33e-04 | gnorm  1.077 |    53,126 tok/s | vram   1647 MB
+step     30/600 | loss  0.709 | lr 5.00e-04 | gnorm  1.245 |    53,296 tok/s | vram   1647 MB
+step     40/600 | loss  0.534 | lr 5.00e-04 | gnorm  0.637 |    53,354 tok/s | vram   1647 MB
+step     50/600 | loss  0.635 | lr 4.99e-04 | gnorm  0.640 |    54,260 tok/s | vram   1647 MB
+step     60/600 | loss  0.516 | lr 4.97e-04 | gnorm  0.663 |    52,855 tok/s | vram   1647 MB
+step     70/600 | loss  0.455 | lr 4.95e-04 | gnorm  0.547 |    52,966 tok/s | vram   1647 MB
+step     80/600 | loss  0.504 | lr 4.92e-04 | gnorm  0.604 |    53,869 tok/s | vram   1647 MB
+step     90/600 | loss  0.575 | lr 4.88e-04 | gnorm  1.884 |    52,676 tok/s | vram   1647 MB
+step    100/600 | loss  0.539 | lr 4.84e-04 | gnorm  1.141 |    52,197 tok/s | vram   1647 MB
+step    100 | val loss  0.603
+step    110/600 | loss  0.526 | lr 4.79e-04 | gnorm  0.856 |    39,386 tok/s | vram   1647 MB
+step    120/600 | loss  0.465 | lr 4.73e-04 | gnorm  0.862 |    53,024 tok/s | vram   1647 MB
+step    130/600 | loss  0.407 | lr 4.67e-04 | gnorm  0.514 |    52,126 tok/s | vram   1647 MB
+step    140/600 | loss  0.460 | lr 4.61e-04 | gnorm  0.616 |    53,310 tok/s | vram   1647 MB
+step    150/600 | loss  0.500 | lr 4.53e-04 | gnorm  0.447 |    53,095 tok/s | vram   1647 MB
+step    160/600 | loss  0.487 | lr 4.45e-04 | gnorm  0.807 |    52,712 tok/s | vram   1647 MB
+step    170/600 | loss  0.496 | lr 4.37e-04 | gnorm  1.129 |    53,766 tok/s | vram   1647 MB
+step    180/600 | loss  0.521 | lr 4.28e-04 | gnorm  0.566 |    53,485 tok/s | vram   1647 MB
+step    190/600 | loss  0.489 | lr 4.19e-04 | gnorm  0.575 |    50,742 tok/s | vram   1647 MB
+step    200/600 | loss  0.437 | lr 4.09e-04 | gnorm  0.431 |    52,210 tok/s | vram   1647 MB
+step    200 | val loss  0.575
+step    210/600 | loss  0.458 | lr 3.99e-04 | gnorm  0.684 |    25,736 tok/s | vram   1647 MB
+step    220/600 | loss  0.509 | lr 3.89e-04 | gnorm  1.481 |    53,720 tok/s | vram   1647 MB
+step    230/600 | loss  0.462 | lr 3.78e-04 | gnorm  1.010 |    51,978 tok/s | vram   1647 MB
+step    240/600 | loss  0.467 | lr 3.67e-04 | gnorm  0.921 |    53,241 tok/s | vram   1647 MB
+step    250/600 | loss  0.468 | lr 3.55e-04 | gnorm  1.002 |    53,244 tok/s | vram   1647 MB
+step    260/600 | loss  0.437 | lr 3.43e-04 | gnorm  1.394 |    52,134 tok/s | vram   1647 MB
+step    270/600 | loss  0.483 | lr 3.31e-04 | gnorm  1.740 |    53,154 tok/s | vram   1647 MB
+step    280/600 | loss  0.385 | lr 3.19e-04 | gnorm  0.732 |    50,825 tok/s | vram   1647 MB
+step    290/600 | loss  0.456 | lr 3.07e-04 | gnorm  0.675 |    52,627 tok/s | vram   1647 MB
+step    300/600 | loss  0.352 | lr 2.95e-04 | gnorm  0.775 |    53,617 tok/s | vram   1647 MB
+step    300 | val loss  0.555
+step    310/600 | loss  0.466 | lr 2.82e-04 | gnorm  0.646 |    44,027 tok/s | vram   1647 MB
+step    320/600 | loss  0.455 | lr 2.70e-04 | gnorm  0.706 |    53,246 tok/s | vram   1647 MB
+step    330/600 | loss  0.437 | lr 2.58e-04 | gnorm  0.838 |    52,775 tok/s | vram   1647 MB
+step    340/600 | loss  0.394 | lr 2.45e-04 | gnorm  0.535 |    53,640 tok/s | vram   1647 MB
+step    350/600 | loss  0.486 | lr 2.33e-04 | gnorm  0.552 |    53,268 tok/s | vram   1647 MB
+step    360/600 | loss  0.433 | lr 2.21e-04 | gnorm  0.821 |    52,821 tok/s | vram   1647 MB
+step    370/600 | loss  0.386 | lr 2.09e-04 | gnorm  0.576 |    53,460 tok/s | vram   1647 MB
+step    380/600 | loss  0.375 | lr 1.97e-04 | gnorm  1.057 |    51,482 tok/s | vram   1647 MB
+step    390/600 | loss  0.449 | lr 1.86e-04 | gnorm  0.889 |    53,296 tok/s | vram   1647 MB
+step    400/600 | loss  0.392 | lr 1.75e-04 | gnorm  0.585 |    52,654 tok/s | vram   1647 MB
+step    400 | val loss  0.526
+step    410/600 | loss  0.424 | lr 1.64e-04 | gnorm  1.306 |    24,184 tok/s | vram   1647 MB
+step    420/600 | loss  0.378 | lr 1.53e-04 | gnorm  0.602 |    51,189 tok/s | vram   1647 MB
+step    430/600 | loss  0.432 | lr 1.43e-04 | gnorm  1.043 |    51,883 tok/s | vram   1647 MB
+step    440/600 | loss  0.416 | lr 1.33e-04 | gnorm  0.868 |    52,193 tok/s | vram   1647 MB
+step    450/600 | loss  0.354 | lr 1.24e-04 | gnorm  0.547 |    51,185 tok/s | vram   1647 MB
+step    460/600 | loss  0.407 | lr 1.15e-04 | gnorm  1.016 |    53,603 tok/s | vram   1647 MB
+step    470/600 | loss  0.403 | lr 1.06e-04 | gnorm  0.637 |    51,865 tok/s | vram   1647 MB
+step    480/600 | loss  0.420 | lr 9.82e-05 | gnorm  0.640 |    53,691 tok/s | vram   1647 MB
+step    490/600 | loss  0.416 | lr 9.08e-05 | gnorm  0.588 |    52,553 tok/s | vram   1647 MB
+step    500/600 | loss  0.419 | lr 8.40e-05 | gnorm  0.600 |    51,926 tok/s | vram   1647 MB
+step    500 | val loss  0.519
+step    510/600 | loss  0.431 | lr 7.77e-05 | gnorm  0.677 |    42,376 tok/s | vram   1647 MB
+step    520/600 | loss  0.328 | lr 7.21e-05 | gnorm  0.639 |    52,222 tok/s | vram   1647 MB
+step    530/600 | loss  0.468 | lr 6.70e-05 | gnorm  0.993 |    50,155 tok/s | vram   1647 MB
+step    540/600 | loss  0.403 | lr 6.26e-05 | gnorm  0.815 |    53,124 tok/s | vram   1647 MB
+step    550/600 | loss  0.400 | lr 5.88e-05 | gnorm  0.718 |    53,046 tok/s | vram   1647 MB
+step    560/600 | loss  0.408 | lr 5.57e-05 | gnorm  0.542 |    50,362 tok/s | vram   1647 MB
+step    570/600 | loss  0.376 | lr 5.33e-05 | gnorm  1.037 |    48,115 tok/s | vram   1647 MB
+step    580/600 | loss  0.446 | lr 5.15e-05 | gnorm  0.679 |    53,266 tok/s | vram   1647 MB
+step    590/600 | loss  0.428 | lr 5.04e-05 | gnorm  0.709 |    52,692 tok/s | vram   1647 MB
+step    600/600 | loss  0.450 | lr 5.00e-05 | gnorm  1.728 |    52,342 tok/s | vram   1647 MB
+step    600 | val loss  0.511
+Xong: {'step': 600, 'train_loss': 0.44955483078956604, 'eval_loss': 0.5107362866401672}
+Đã gộp LoRA -> checkpoints\50m\lora_merged.pt
