@@ -56,8 +56,11 @@ def final_answer(encoder: ChatEncoder, ids: list[int], generated: list[bool]) ->
 
 
 def greedy_sampler(model, encoder: ChatEncoder, max_new_tokens: int) -> SampleFn:
+    device = next(model.parameters()).device  # model có thể nằm trên GPU
+
     def sample(ids: list[int]) -> list[int]:
-        output = generate(model, torch.tensor([ids]), max_new_tokens, temperature=0.0, eos_id=encoder.im_end_id)
+        input_ids = torch.tensor([ids], device=device)
+        output = generate(model, input_ids, max_new_tokens, temperature=0.0, eos_id=encoder.im_end_id)
         return output[0, len(ids):].tolist()
 
     return sample

@@ -33,7 +33,7 @@ def token_rewards(batch: dict, ref_log_probs: torch.Tensor, beta_kl: float) -> t
     mask = batch["mask"]
     rewards = -beta_kl * (batch["old_log_probs"] - ref_log_probs) * mask
     last = mask.shape[1] - 1 - mask.flip(dims=[1]).argmax(dim=1)
-    rewards[torch.arange(mask.shape[0]), last] += batch["rewards"]
+    rewards[torch.arange(mask.shape[0], device=mask.device), last] += batch["rewards"]
     return rewards
 
 
