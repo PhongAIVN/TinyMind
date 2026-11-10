@@ -5,6 +5,7 @@
 #    powershell -ExecutionPolicy Bypass -File scripts\windows\setup_gpu_vm.ps1
 #    ... -SkipDownload      chi cai moi truong
 #    ... -DryRun            chi liet ke file se tai, khong tai
+#    ... -Only a,b,c        chi tai cac nguon co Dir trong danh sach (vd nguon cho SFT)
 #
 #  Du lieu tai ve: dataset\raw\<nguon>\  (khop SOURCES trong scripts\build_pretrain_corpus.py)
 # ================================================================
@@ -12,7 +13,8 @@ param(
     # cu128: can cho GPU Blackwell (RTX 50xx), van chay tren 30xx/40xx
     [string]$TorchIndex = "https://download.pytorch.org/whl/cu128",
     [switch]$SkipDownload,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [string]$Only = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,6 +44,13 @@ $Downloads = @(
     @{ Repo = "5CD-AI/Vietnamese-Ecommerce-Multi-turn-Chat";           Dir = "ecommerce_chat_vi"; Include = @("*.json") },
     @{ Repo = "nguyenthanhdo/ultrachat-75k-vi";                        Dir = "ultrachat_vi";    Include = @("data/*.parquet") }
 )
+
+if ($Only) {
+    $wanted = $Only -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+    $unknown = $wanted | Where-Object { $_ -notin $Downloads.Dir }
+    if ($unknown) { throw "Nguon khong co trong danh sach: $($unknown -join ', ')" }
+    $Downloads = @($Downloads | Where-Object { $_.Dir -in $wanted })
+}
 
 $VenvPython = ".venv\Scripts\python.exe"
 
